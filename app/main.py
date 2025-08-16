@@ -9,7 +9,7 @@ def health():
     return jsonify(status="ok", version=APP_VERSION, build_date=BUILD_DATE), 200
 @app.route('/')
 def home():
-    return "Hello from Elastic Beanstalk!"
+    return "Hello from Elastic Beanstalk!!"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
