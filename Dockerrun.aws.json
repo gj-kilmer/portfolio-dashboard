@@ -1,10 +1,5 @@
 {
   "AWSEBDockerrunVersion": 1,
-  "Image": {
-    "Name": "REPLACE_ECR_IMAGE_AT_RUNTIME",
-    "Update": "true"
-  },
-  "Ports": [
-    { "ContainerPort": 8080 }
-  ]
+  "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
+  "Ports": [ { "ContainerPort": "8080" } ]
 }
