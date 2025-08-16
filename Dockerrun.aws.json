@@ -1,12 +1,10 @@
 {
-  "AWSEBDockerrunVersion": 2,
-  "containerDefinitions": [
-    {
-      "name": "portfolio-dashboard",
-      "image": "REPLACE_ECR_IMAGE_AT_RUNTIME",
-      "essential": true,
-      "portMappings": [{ "containerPort": 8080 }],
-      "memory": 512
-    }
+  "AWSEBDockerrunVersion": 1,
+  "Image": {
+    "Name": "REPLACE_ECR_IMAGE_AT_RUNTIME",
+    "Update": "true"
+  },
+  "Ports": [
+    { "ContainerPort": "8080" }
   ]
 }
