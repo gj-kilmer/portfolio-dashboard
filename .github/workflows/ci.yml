@@ -1,29 +1,75 @@
-name: CI
+name: CI • Build, Test, Push (GHCR)
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write   # needed to push to GHCR
+  id-token: write   # (not used here, but handy later)
 
 jobs:
-  build:
+  build-test-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout (full history for tags)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Compute build metadata
+        id: meta
+        run: |
+          APP_VERSION=$(git describe --tags --always --dirty --abbrev=7 2>/dev/null)
+          echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          # lowercased repo path for GHCR
+          echo "image_repo=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image
+      # ---- Build locally (classic docker), inject version/date, then test ----
+      - name: Build Docker image (local)
         run: |
           docker build \
-            --build-arg APP_VERSION=$(git rev-parse --short HEAD) \
-            --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-            -t portfolio-app .
+            --build-arg APP_VERSION="${{ steps.meta.outputs.app_version }}" \
+            --build-arg GIT_SHA="${{ steps.meta.outputs.short_sha }}" \
+            --build-arg BUILD_DATE="${{ steps.meta.outputs.build_date }}" \
+            -t portfolio-app:ci .
 
-      - name: Run container
+      - name: Test container (/health)
         run: |
-          docker run -d -p 8080:8080 --name test-app portfolio-app
-          sleep 5
-          curl http://localhost:8080/health
+          docker run -d -p 8080:8080 --name app portfolio-app:ci
+          # give it a moment to boot
+          for i in {1..10}; do
+            sleep 1
+            curl -fsS http://localhost:8080/health && break || true
+          done
+          # show the health response (will fail job if not 200)
+          curl -fS http://localhost:8080/health
+          docker stop app
+
+      # ---- Tag & push to GHCR ----
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push
+        env:
+          IMAGE_REPO: ${{ steps.meta.outputs.image_repo }}
+          SHORT_SHA:  ${{ steps.meta.outputs.short_sha }}
+          APP_VERSION: ${{ steps.meta.outputs.app_version }}
+        run: |
+          IMAGE_SHA="$IMAGE_REPO:sha-${GITHUB_SHA}"
+          IMAGE_VER="$IMAGE_REPO:${APP_VERSION}"
+          # tag from the locally built image
+          docker tag portfolio-app:ci "$IMAGE_SHA"
+          docker tag portfolio-app:ci "$IMAGE_VER"
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_VER"
+          echo "PUBLISHED: $IMAGE_SHA and $IMAGE_VER"
