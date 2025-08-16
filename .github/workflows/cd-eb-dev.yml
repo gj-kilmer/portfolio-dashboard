@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Prevent overlapping deploys to the same env
+concurrency:
+  group: eb-dev-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   id-token: write
@@ -22,7 +27,7 @@ jobs:
       - name: Compute build metadata
         id: meta
         run: |
-          echo "APP_VERSION=$(git describe --tags --always --dirty --abbrev=7)" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$(git describe --tags --always --dirty --abbrev=7 || echo unknown)" >> $GITHUB_OUTPUT
           echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
@@ -44,6 +49,7 @@ jobs:
           BUILD_DATE:  ${{ steps.meta.outputs.BUILD_DATE }}
           SHORT_SHA:   ${{ steps.meta.outputs.SHORT_SHA }}
         run: |
+          set -euo pipefail
           IMAGE="$REGISTRY/$ECR_REPO:sha-${GITHUB_SHA}"
           docker build \
             --build-arg APP_VERSION="$APP_VERSION" \
@@ -52,30 +58,48 @@ jobs:
             -t "$IMAGE" .
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "Pushed image: $IMAGE"
 
-      - name: Render Dockerrun with ECR image
+      - name: Render Dockerrun with ECR image (and show it)
         run: |
+          set -euo pipefail
+          # Replace placeholder and ensure the file is named exactly Dockerrun.aws.json
           sed "s|REPLACE_ECR_IMAGE_AT_RUNTIME|${IMAGE}|g" Dockerrun.aws.json > Dockerrun.aws.json.rendered
           mv Dockerrun.aws.json.rendered Dockerrun.aws.json
-          zip -9 app-${GITHUB_SHA}.zip Dockerrun.aws.json
+          echo "----- Dockerrun.aws.json (rendered) -----"
+          cat Dockerrun.aws.json
+          zip -9 "app-${GITHUB_SHA}.zip" Dockerrun.aws.json
+          ls -l "app-${GITHUB_SHA}.zip"
 
       - name: Create EB application version
         env:
           APP:    ${{ secrets.EB_APP_NAME }}
           REGION: ${{ secrets.AWS_REGION }}
         run: |
+          set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           BUCKET="elasticbeanstalk-${REGION}-${ACCOUNT_ID}"
-          aws s3 cp "app-${GITHUB_SHA}.zip" "s3://$BUCKET/"
+          ZIP="app-${GITHUB_SHA}.zip"
+          aws s3 cp "$ZIP" "s3://$BUCKET/$ZIP"
           aws elasticbeanstalk create-application-version \
             --application-name "$APP" \
             --version-label "sha-${GITHUB_SHA}" \
-            --source-bundle S3Bucket="$BUCKET",S3Key="app-${GITHUB_SHA}.zip"
+            --source-bundle S3Bucket="$BUCKET",S3Key="$ZIP"
 
-      - name: Deploy to dev
+      - name: Deploy to dev environment
         env:
           ENV: ${{ secrets.EB_ENV_DEV }}
         run: |
+          set -euo pipefail
           aws elasticbeanstalk update-environment \
             --environment-name "$ENV" \
             --version-label "sha-${GITHUB_SHA}"
+          echo "Triggered deploy of version sha-${GITHUB_SHA} to $ENV"
+
+      - name: Show environment URL
+        env:
+          APP: ${{ secrets.EB_APP_NAME }}
+        run: |
+          aws elasticbeanstalk describe-environments \
+            --application-name "$APP" \
+            --query "Environments[?Status=='Ready'].CNAME" --output text || true
