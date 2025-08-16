@@ -1,5 +1,13 @@
 {
   "AWSEBDockerrunVersion": 1,
-  "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
-  "Ports": [ { "ContainerPort": 8080 } ]
+  "Image": {
+    "Name": "911902230696.dkr.ecr.us-east-1.amazonaws.com/it-ops-demo:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8080
+    }
+  ],
+  "Logging": "/var/log/nginx"
 }

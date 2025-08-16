@@ -2,104 +2,157 @@ name: CD • Elastic Beanstalk (dev)
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   workflow_dispatch:
 
-# Prevent overlapping deploys to the same env
-concurrency:
-  group: eb-dev-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
+  id-token: write    # for OIDC
   contents: read
-  id-token: write
+
+env:
+  AWS_REGION:         ${{ secrets.AWS_REGION }}
+  AWS_ROLE_ARN:       ${{ secrets.AWS_ROLE_ARN }}
+  ECR_REPO:           ${{ secrets.ECR_REPO }}        # e.g. "it-ops-demo"
+  EB_APP_NAME:        ${{ secrets.EB_APP_NAME }}     # e.g. "it-ops-demo"
+  EB_ENV_NAME:        ${{ secrets.EB_ENV_DEV }}      # e.g. "it-ops-demo-env"
 
 jobs:
-  deploy-dev:
+  deploy:
+    name: Build → Push to ECR → EB Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (full history for tags)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Compute build metadata
-        id: meta
-        run: |
-          echo "APP_VERSION=$(git describe --tags --always --dirty --abbrev=7 || echo unknown)" >> $GITHUB_OUTPUT
-          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
-          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Configure AWS (OIDC)
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build & push image to ECR
-        env:
-          REGISTRY:  ${{ steps.ecr.outputs.registry }}
-          ECR_REPO:  ${{ secrets.ECR_REPO }}
-          APP_VERSION: ${{ steps.meta.outputs.APP_VERSION }}
-          BUILD_DATE:  ${{ steps.meta.outputs.BUILD_DATE }}
-          SHORT_SHA:   ${{ steps.meta.outputs.SHORT_SHA }}
+      - name: Ensure ECR repo exists
         run: |
           set -euo pipefail
-          IMAGE="$REGISTRY/$ECR_REPO:sha-${GITHUB_SHA}"
-          docker build \
-            --build-arg APP_VERSION="$APP_VERSION" \
-            --build-arg GIT_SHA="$SHORT_SHA" \
-            --build-arg BUILD_DATE="$BUILD_DATE" \
-            -t "$IMAGE" .
-          docker push "$IMAGE"
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-          echo "Pushed image: $IMAGE"
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name "${ECR_REPO}" >/dev/null
+          echo "ECR repo ready: ${ECR_REPO}"
 
-      - name: Render Dockerrun with ECR image (and show it)
+      - name: Derive build metadata
+        id: meta
         run: |
           set -euo pipefail
-          # Replace placeholder and ensure the file is named exactly Dockerrun.aws.json
-          sed "s|REPLACE_ECR_IMAGE_AT_RUNTIME|${IMAGE}|g" Dockerrun.aws.json > Dockerrun.aws.json.rendered
-          mv Dockerrun.aws.json.rendered Dockerrun.aws.json
-          echo "----- Dockerrun.aws.json (rendered) -----"
+          SHORT_SHA=$(git rev-parse --short HEAD || echo "local")
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "SHORT_SHA=${SHORT_SHA}"          >> $GITHUB_ENV
+          echo "BUILD_DATE=${BUILD_DATE}"        >> $GITHUB_ENV
+          echo "IMG_TAG=sha-${GITHUB_SHA}"       >> $GITHUB_ENV
+          echo "REGISTRY=${{ steps.ecr.outputs.registry }}" >> $GITHUB_ENV
+          echo "ECR_URI=${{ steps.ecr.outputs.registry }}/${ECR_REPO}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          set -euo pipefail
+          docker build \
+            --build-arg APP_VERSION="${SHORT_SHA}" \
+            --build-arg GIT_SHA="${SHORT_SHA}" \
+            --build-arg BUILD_DATE="${BUILD_DATE}" \
+            -t "${ECR_URI}:${IMG_TAG}" \
+            .
+
+      - name: Push image to ECR (retry with backoff)
+        run: |
+          set -euo pipefail
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          for attempt in 1 2 3 4 5; do
+            if docker push "${ECR_URI}:${IMG_TAG}"; then
+              echo "Push succeeded on attempt ${attempt}"
+              exit 0
+            fi
+            echo "Push failed (attempt ${attempt}). Sleeping $((attempt*15))s…"
+            sleep $((attempt*15))
+          done
+          echo "ERROR: docker push failed after retries" >&2
+          exit 1
+
+      # --- Render Dockerrun v1 and package only what EB needs ---
+      - name: Render Dockerrun (v1) with ECR image
+        run: |
+          set -euo pipefail
+          cat > Dockerrun.aws.json <<'JSON'
+          {
+            "AWSEBDockerrunVersion": 1,
+            "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
+            "Ports": [ { "ContainerPort": "8080" } ]
+          }
+          JSON
+          sed -i "s|REPLACED_AT_RUNTIME|${ECR_URI}:${IMG_TAG}|g" Dockerrun.aws.json
+          echo "----- Dockerrun (rendered) -----"
           cat Dockerrun.aws.json
-          zip -9 "app-${GITHUB_SHA}.zip" Dockerrun.aws.json
-          ls -l "app-${GITHUB_SHA}.zip"
+
+      - name: Build EB source bundle (only Dockerrun + .ebextensions)
+        run: |
+          set -euo pipefail
+          rm -rf bundle && mkdir bundle
+          cp Dockerrun.aws.json bundle/
+          if [ -d ".ebextensions" ]; then
+            cp -R .ebextensions bundle/
+          fi
+          cd bundle
+          zip -r "../app-${GITHUB_SHA}.zip" Dockerrun.aws.json .ebextensions 2>/dev/null || zip "../app-${GITHUB_SHA}.zip" Dockerrun.aws.json
+          cd -
+          echo "----- ZIP contents -----"
+          unzip -l "app-${GITHUB_SHA}.zip"
+          echo "----- Dockerrun inside ZIP -----"
+          unzip -p "app-${GITHUB_SHA}.zip" Dockerrun.aws.json
+
+      - name: Determine EB S3 bucket
+        id: eb_bucket
+        run: |
+          set -euo pipefail
+          # This returns (and creates if needed) your account's EB app version bucket
+          BUCKET=$(aws elasticbeanstalk create-storage-location --output text)
+          echo "EB_BUCKET=${BUCKET}" >> $GITHUB_ENV
+          echo "Using EB bucket: ${BUCKET}"
+
+      - name: Upload bundle to EB S3
+        run: |
+          set -euo pipefail
+          ZIP_KEY="app-${GITHUB_SHA}.zip"
+          aws s3 cp "app-${GITHUB_SHA}.zip" "s3://${EB_BUCKET}/${ZIP_KEY}"
+          echo "ZIP_KEY=${ZIP_KEY}" >> $GITHUB_ENV
 
       - name: Create EB application version
-        env:
-          APP:    ${{ secrets.EB_APP_NAME }}
-          REGION: ${{ secrets.AWS_REGION }}
         run: |
           set -euo pipefail
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          BUCKET="elasticbeanstalk-${REGION}-${ACCOUNT_ID}"
-          ZIP="app-${GITHUB_SHA}.zip"
-          aws s3 cp "$ZIP" "s3://$BUCKET/$ZIP"
           aws elasticbeanstalk create-application-version \
-            --application-name "$APP" \
+            --application-name "${EB_APP_NAME}" \
             --version-label "sha-${GITHUB_SHA}" \
-            --source-bundle S3Bucket="$BUCKET",S3Key="$ZIP"
+            --source-bundle S3Bucket="${EB_BUCKET}",S3Key="${ZIP_KEY}"
+          echo "Created EB app version sha-${GITHUB_SHA}"
 
-      - name: Deploy to dev environment
-        env:
-          ENV: ${{ secrets.EB_ENV_DEV }}
+      - name: Update EB environment
         run: |
           set -euo pipefail
           aws elasticbeanstalk update-environment \
-            --environment-name "$ENV" \
+            --application-name "${EB_APP_NAME}" \
+            --environment-name "${EB_ENV_NAME}" \
             --version-label "sha-${GITHUB_SHA}"
-          echo "Triggered deploy of version sha-${GITHUB_SHA} to $ENV"
+          echo "Triggered deploy to ${EB_ENV_NAME}"
 
-      - name: Show environment URL
-        env:
-          APP: ${{ secrets.EB_APP_NAME }}
+      - name: Show EB events (tail)
         run: |
-          aws elasticbeanstalk describe-environments \
-            --application-name "$APP" \
-            --query "Environments[?Status=='Ready'].CNAME" --output text || true
+          set -euo pipefail
+          # Optional: fetch the latest few events to help debugging
+          aws elasticbeanstalk describe-events \
+            --environment-name "${EB_ENV_NAME}" \
+            --max-records 25 \
+            --query 'Events[].[EventDate,Severity,Message]' \
+            --output table
