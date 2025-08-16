@@ -1,0 +1,4 @@
+name: aws-oidc-check.yml
+on:
+
+jobs:

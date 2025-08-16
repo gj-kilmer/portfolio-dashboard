@@ -1,0 +1,80 @@
+name: CD • Elastic Beanstalk (dev)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history for tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute build metadata
+        id: meta
+        run: |
+          echo "APP_VERSION=$(git describe --tags --always --dirty --abbrev=7)" >> $GITHUB_OUTPUT
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push image to ECR
+        env:
+          REGISTRY:  ${{ steps.ecr.outputs.registry }}
+          ECR_REPO:  ${{ secrets.ECR_REPO }}
+          APP_VERSION: ${{ steps.meta.outputs.APP_VERSION }}
+          BUILD_DATE:  ${{ steps.meta.outputs.BUILD_DATE }}
+          SHORT_SHA:   ${{ steps.meta.outputs.SHORT_SHA }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPO:sha-${GITHUB_SHA}"
+          docker build \
+            --build-arg APP_VERSION="$APP_VERSION" \
+            --build-arg GIT_SHA="$SHORT_SHA" \
+            --build-arg BUILD_DATE="$BUILD_DATE" \
+            -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Render Dockerrun with ECR image
+        run: |
+          sed "s|REPLACE_ECR_IMAGE_AT_RUNTIME|${IMAGE}|g" Dockerrun.aws.json > Dockerrun.rendered.json
+          zip -9 app-${GITHUB_SHA}.zip Dockerrun.rendered.json
+
+      - name: Create EB application version
+        env:
+          APP:    ${{ secrets.EB_APP_NAME }}
+          REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          BUCKET="elasticbeanstalk-${REGION}-${ACCOUNT_ID}"
+          aws s3 cp "app-${GITHUB_SHA}.zip" "s3://$BUCKET/"
+          aws elasticbeanstalk create-application-version \
+            --application-name "$APP" \
+            --version-label "sha-${GITHUB_SHA}" \
+            --source-bundle S3Bucket="$BUCKET",S3Key="app-${GITHUB_SHA}.zip"
+
+      - name: Deploy to dev
+        env:
+          ENV: ${{ secrets.EB_ENV_DEV }}
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$ENV" \
+            --version-label "sha-${GITHUB_SHA}"
