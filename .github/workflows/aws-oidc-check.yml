@@ -1,4 +1,15 @@
-name: aws-oidc-check.yml
-on:
-
+name: AWS OIDC Check
+on: [workflow_dispatch]
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions: { id-token: write, contents: read }
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: |
+          aws sts get-caller-identity
+          echo "EB app:" && aws elasticbeanstalk describe-applications --query "Applications[?ApplicationName=='${{ secrets.EB_APP_NAME }}'].ApplicationName"
+          echo "ECR repo (ok if not found):" && aws ecr describe-repositories --repository-names "${{ secrets.ECR_REPO }}" || true

@@ -55,8 +55,9 @@ jobs:
 
       - name: Render Dockerrun with ECR image
         run: |
-          sed "s|REPLACE_ECR_IMAGE_AT_RUNTIME|${IMAGE}|g" Dockerrun.aws.json > Dockerrun.rendered.json
-          zip -9 app-${GITHUB_SHA}.zip Dockerrun.rendered.json
+          sed "s|REPLACE_ECR_IMAGE_AT_RUNTIME|${IMAGE}|g" Dockerrun.aws.json > Dockerrun.aws.json.rendered
+          mv Dockerrun.aws.json.rendered Dockerrun.aws.json
+          zip -9 app-${GITHUB_SHA}.zip Dockerrun.aws.json
 
       - name: Create EB application version
         env:
