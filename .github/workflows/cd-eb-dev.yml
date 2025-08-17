@@ -27,6 +27,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Ensure tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y jq zip unzip
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -82,31 +88,53 @@ jobs:
           echo "ERROR: docker push failed after retries" >&2
           exit 1
 
-      # --- Render Dockerrun v1 and package only what EB needs ---
       - name: Render Dockerrun (v1) with ECR image
         run: |
           set -euo pipefail
           cat > Dockerrun.aws.json <<'JSON'
-          {
-            "AWSEBDockerrunVersion": 1,
-            "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
-            "Ports": [ { "ContainerPort": "8080" } ]
-          }
+      {
+        "AWSEBDockerrunVersion": 1,
+        "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
+        "Ports": [ { "ContainerPort": "8080" } ]
+      }
           JSON
-          sed -i "s|REPLACED_AT_RUNTIME|${ECR_URI}:${IMG_TAG}|g" Dockerrun.aws.json
-          echo "----- Dockerrun (rendered) -----"
-          cat Dockerrun.aws.json
+            # portable in-place edit (creates .bak then removes it)
+            sed -i.bak "s|REPLACED_AT_RUNTIME|${ECR_URI}:${IMG_TAG}|g" Dockerrun.aws.json
+            rm -f Dockerrun.aws.json.bak
+            echo "----- Dockerrun (rendered) -----"
+            cat Dockerrun.aws.json
 
-      - name: Build EB source bundle (only Dockerrun + .ebextensions)
+      - name: Validate Dockerrun (strip BOM, assert version=1, show checksum)
+        run: |
+          set -euo pipefail
+          echo '----- Dockerrun (rendered) -----'
+          cat Dockerrun.aws.json
+          echo
+          echo '----- Strip BOM if present -----'
+          python3 - <<'PY'
+import pathlib
+p = pathlib.Path('Dockerrun.aws.json')
+b = p.read_bytes()
+if b.startswith(b'\xef\xbb\xbf'):
+    p.write_bytes(b[3:])
+    print('BOM removed')
+else:
+    print('No BOM')
+PY
+          echo '----- Validate JSON & version -----'
+          jq -e '.AWSEBDockerrunVersion == 1' Dockerrun.aws.json >/dev/null \
+            || (echo 'ERROR: AWSEBDockerrunVersion must be 1' && exit 1)
+          echo 'JSON OK, version = 1'
+          echo '----- SHA1 of Dockerrun -----'
+          shasum Dockerrun.aws.json
+
+      - name: Build EB source bundle (Dockerrun only)
         run: |
           set -euo pipefail
           rm -rf bundle && mkdir bundle
           cp Dockerrun.aws.json bundle/
-          if [ -d ".ebextensions" ]; then
-            cp -R .ebextensions bundle/
-          fi
           cd bundle
-          zip -r "../app-${GITHUB_SHA}.zip" Dockerrun.aws.json .ebextensions 2>/dev/null || zip "../app-${GITHUB_SHA}.zip" Dockerrun.aws.json
+          zip "../app-${GITHUB_SHA}.zip" Dockerrun.aws.json
           cd -
           echo "----- ZIP contents -----"
           unzip -l "app-${GITHUB_SHA}.zip"
