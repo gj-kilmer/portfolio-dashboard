@@ -93,7 +93,7 @@ jobs:
           set -euo pipefail
           cat > Dockerrun.aws.json <<'JSON'
           {
-            "AWSEBDockerrunVersion": 1,
+            "AWSEBDockerrunVersion": "1",
             "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
             "Ports": [ { "ContainerPort": "8080" } ]
           }
@@ -122,10 +122,11 @@ jobs:
               print('No BOM')
           PY
           echo '----- Validate JSON & version -----'
-          jq -e '.AWSEBDockerrunVersion == 1' Dockerrun.aws.json >/dev/null \
-            || (echo 'ERROR: AWSEBDockerrunVersion must be 1' && exit 1)
+          jq -e '.AWSEBDockerrunVersion == "1"' Dockerrun.aws.json >/dev/null \
+            || (echo 'ERROR: AWSEBDockerrunVersion must be "1"' && exit 1)
           echo 'JSON OK, version = 1'
           echo '----- SHA1 of Dockerrun -----'
+          echo "ECR image to deploy: ${ECR_URI}:${IMG_TAG}"
           shasum Dockerrun.aws.json
 
       - name: Build EB source bundle (Dockerrun only)
