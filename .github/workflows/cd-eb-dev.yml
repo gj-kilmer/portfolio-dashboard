@@ -92,17 +92,17 @@ jobs:
         run: |
           set -euo pipefail
           cat > Dockerrun.aws.json <<'JSON'
-      {
-        "AWSEBDockerrunVersion": 1,
-        "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
-        "Ports": [ { "ContainerPort": "8080" } ]
-      }
+          {
+            "AWSEBDockerrunVersion": 1,
+            "Image": { "Name": "REPLACED_AT_RUNTIME", "Update": "true" },
+            "Ports": [ { "ContainerPort": "8080" } ]
+          }
           JSON
-            # portable in-place edit (creates .bak then removes it)
-            sed -i.bak "s|REPLACED_AT_RUNTIME|${ECR_URI}:${IMG_TAG}|g" Dockerrun.aws.json
-            rm -f Dockerrun.aws.json.bak
-            echo "----- Dockerrun (rendered) -----"
-            cat Dockerrun.aws.json
+          # portable in-place edit (creates .bak then removes it)
+          sed -i.bak "s|REPLACED_AT_RUNTIME|${ECR_URI}:${IMG_TAG}|g" Dockerrun.aws.json
+          rm -f Dockerrun.aws.json.bak
+          echo "----- Dockerrun (rendered) -----"
+          cat Dockerrun.aws.json
 
       - name: Validate Dockerrun (strip BOM, assert version=1, show checksum)
         run: |
