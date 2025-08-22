@@ -1,0 +1,111 @@
+name: CD • Static Website (S3 + CloudFront)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION:   ${{ secrets.AWS_REGION }}     # e.g., us-east-1
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}   # OIDC-assumable role
+  S3_BUCKET:    ${{ secrets.S3_BUCKET }}      # e.g., bitcurrents.net
+  CF_DISTR_ID:  ${{ secrets.CF_DISTR_ID }}    # CloudFront distribution ID
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show changed files in this push
+        run: |
+          echo "----- Changed files in this push -----"
+          if [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            git diff --name-status ${{ github.event.before }} ${{ github.sha }}
+          else
+            echo "No previous commit found (likely first push). Listing tracked files:"
+            git ls-files
+          fi
+          echo "--------------------------------------"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ----- Hardening: no root-level CSS/JS -----
+      - name: Enforce no root-level CSS/JS
+        run: |
+          set -euo pipefail
+          offenders=$(find . -maxdepth 1 -type f \( -name "*.css" -o -name "*.js" \) | sed 's|^\./||')
+          if [ -n "$offenders" ]; then
+            echo "::error::Do not place CSS/JS in repo root. Move to assets/css or assets/js:"
+            echo "$offenders"
+            exit 1
+          fi
+          echo "Folder structure OK."
+
+      # ----- Sync ALL HTML files (any depth) with correct headers -----
+      # Note: sync applies headers only on uploaded/changed files.
+      - name: Upload HTML files (nested)
+        run: |
+          set -euo pipefail
+          aws s3 sync . "s3://$S3_BUCKET/" \
+            --exclude "*" \
+            --include "*.html" \
+            --include "*/**/*.html" \
+            --exact-timestamps \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      # ----- Sync assets with long-lived cache (if present) -----
+      - name: Upload assets (css/js/images/static)
+        run: |
+          set -euo pipefail
+          if [ -d "assets/css" ]; then
+            aws s3 sync assets/css/ "s3://$S3_BUCKET/assets/css/" \
+              --exact-timestamps \
+              --cache-control "public, max-age=31536000, immutable"
+          fi
+          if [ -d "assets/js" ]; then
+            aws s3 sync assets/js/ "s3://$S3_BUCKET/assets/js/" \
+              --exact-timestamps \
+              --cache-control "public, max-age=31536000, immutable"
+          fi
+          if [ -d "assets/images" ]; then
+            aws s3 sync assets/images/ "s3://$S3_BUCKET/assets/images/" \
+              --exact-timestamps \
+              --cache-control "public, max-age=31536000, immutable"
+          fi
+          if [ -d "static" ]; then
+            aws s3 sync static/ "s3://$S3_BUCKET/static/" \
+              --exact-timestamps \
+              --cache-control "public, max-age=31536000, immutable"
+          fi
+
+      # Keep bucket tidy: optional cleanup of removed files at top-level paths
+      # (Uncomment if you want deletions mirrored; be careful during early development.)
+      # - name: Optional cleanup (mirror deletions)
+      #   run: |
+      #     set -euo pipefail
+      #     aws s3 sync . "s3://$S3_BUCKET/" --exclude "*" --include "*.html" --include "*/**/*.html" --delete
+      #     [ -d assets/css ]    && aws s3 sync assets/css/    "s3://$S3_BUCKET/assets/css/"    --delete
+      #     [ -d assets/js ]     && aws s3 sync assets/js/     "s3://$S3_BUCKET/assets/js/"     --delete
+      #     [ -d assets/images ] && aws s3 sync assets/images/ "s3://$S3_BUCKET/assets/images/" --delete
+      #     [ -d static ]        && aws s3 sync static/        "s3://$S3_BUCKET/static/"        --delete
+
+      # ----- Invalidate CloudFront so changes show immediately -----
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$CF_DISTR_ID" \
+            --paths "/*"
