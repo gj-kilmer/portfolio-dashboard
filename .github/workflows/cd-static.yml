@@ -10,10 +10,10 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION:   ${{ secrets.AWS_REGION }}     # e.g., us-east-1
-  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}   # OIDC-assumable role
-  S3_BUCKET:    ${{ secrets.S3_BUCKET }}      # e.g., bitcurrents.net
-  CF_DISTR_ID:  ${{ secrets.CF_DISTR_ID }}    # CloudFront distribution ID
+  AWS_REGION:   us-east-1     # e.g., us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::911902230696:role/GitHubActions-StaticDeployer   # OIDC-assumable role
+  S3_BUCKET:    bitcurrents.net      # e.g., bitcurrents.net
+  CF_DISTR_ID:  E3NP32DM80HARU    # CloudFront distribution ID
 
 jobs:
   deploy:
@@ -60,12 +60,12 @@ jobs:
         run: |
           set -euo pipefail
           aws s3 sync . "s3://$S3_BUCKET/" \
-            --exclude "*" \
-            --include "*.html" \
-            --include "*/**/*.html" \
-            --exact-timestamps \
-            --content-type "text/html; charset=utf-8" \
-            --cache-control "public, max-age=0, must-revalidate"
+          --exclude "*" \
+          --include "*.html" \
+          --include "**/*.html" \
+          --exact-timestamps \
+          --content-type "text/html; charset=utf-8" \
+          --cache-control "public, max-age=0, must-revalidate"
 
       # ----- Sync assets with long-lived cache (if present) -----
       - name: Upload assets (css/js/images/static)
