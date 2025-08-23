@@ -3,6 +3,14 @@ name: CD • Static Website (S3 + CloudFront)
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '**/*.html'
+      - 'assets/**'
+      - 'static/**'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'favicon.ico'
+      - '.github/workflows/cd-static.yml'
   workflow_dispatch:
 
 permissions:

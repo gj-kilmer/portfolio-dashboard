@@ -2,8 +2,18 @@ name: CI • Build, Test, Push (GHCR)
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
+    paths:
+      - 'app/**'
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - '.github/workflows/ci.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'Dockerfile'
+      - 'requirements.txt'
+  workflow_dispatch:
 
 permissions:
   contents: read

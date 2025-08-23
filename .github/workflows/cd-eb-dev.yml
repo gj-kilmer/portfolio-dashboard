@@ -3,6 +3,13 @@ name: CD • Elastic Beanstalk (dev)
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'app/**'
+      - 'Dockerfile'
+      - 'Dockerrun.aws.json'
+      - 'requirements.txt'
+      - '.ebextensions/**'
+      - '.github/workflows/cd-eb-dev.yml'
   workflow_dispatch:
 
 permissions:
