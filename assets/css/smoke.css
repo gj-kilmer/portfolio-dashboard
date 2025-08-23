@@ -1,1 +1,80 @@
-body { font-family: system-ui, sans-serif; }
+/* ========== Design Tokens (Palette) ========== */
+:root{
+  --bg: #f9fafb;
+  --text: #111827;
+  --muted: #4b5563;
+  --border: #e5e7eb;
+
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+
+  --emerald: #10b981;
+  --indigo: #6366f1;
+  --danger: #ef4444;
+
+  --tile-bg: #ffffff;
+  --footer-bg: #1f2937;
+
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(0,0,0,0.06);
+  --shadow-hover: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+/* ========== Base ========== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body.site-bg{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+
+/* Containers */
+.container{max-width:1100px;margin-inline:auto;padding:24px}
+
+/* Header */
+.site-header{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand-dot{width:12px;height:12px;border-radius:50%;background:var(--primary)}
+.brand-name{letter-spacing:.2px}
+.nav a{color:var(--muted);text-decoration:none;margin-left:18px}
+.nav a:hover{color:var(--primary)}
+
+/* Hero */
+.hero{padding:48px 0}
+.hero h1{margin:0 0 8px;font-size:clamp(28px,4vw,40px)}
+.hero p{margin:0 0 20px;color:var(--muted)}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+
+/* Buttons */
+.btn{display:inline-block;padding:10px 16px;border-radius:10px;text-decoration:none;font-weight:600;transition:.18s transform,.18s box-shadow,.18s background}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-block{display:block;width:100%;text-align:center}
+
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--primary-hover);box-shadow:var(--shadow-hover)}
+.btn-ghost{border:1px solid var(--border);color:var(--text);background:#fff}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--danger);color:#fff;border:none}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin:8px 0 40px}
+.tile{background:var(--tile-bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 16px;transition:.18s transform,.18s box-shadow}
+.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.tile h2{margin:10px 0 8px;font-size:20px}
+.tile p{margin:0 0 10px;color:var(--muted)}
+.tile .link{color:var(--primary);text-decoration:none;font-weight:600}
+.tile .link:hover{text-decoration:underline}
+
+/* Accent bars */
+.tile-accent{height:6px;border-radius:8px;background:var(--primary);margin:-6px -6px 10px}
+.tile-accent-emerald{background:var(--emerald)}
+.tile-accent-indigo{background:var(--indigo)}
+
+/* Buttons gallery */
+.buttons-gallery{margin:24px 0}
+.buttons-gallery h3{margin:0 0 12px}
+.stack{display:flex;gap:12px;flex-wrap:wrap}
+
+/* Footer */
+.site-footer{background:var(--footer-bg);color:#cbd5e1;margin-top:40px}
+.footer-inner{display:flex;justify-content:space-between;align-items:center}
+.site-footer a{color:#cbd5e1;text-decoration:none;margin-left:16px}
+.site-footer a:hover{color:#fff}
