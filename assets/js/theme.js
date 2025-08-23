@@ -31,7 +31,7 @@
     const btn = getToggleBtn();
     const label = btn?.querySelector('.theme-label') || btn;
     if (label) {
-      label.textContent = t === 'dark' ? 'Light mode (on)' : 'Dark mode';
+      label.textContent = t === 'dark' ? 'Light mode ' : 'Dark mode';
     }
   }
 
