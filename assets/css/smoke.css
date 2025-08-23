@@ -20,15 +20,20 @@
   --shadow-hover: 0 10px 24px rgba(0,0,0,0.08);
 }
 
-:root[data-theme="dark"]{
-  --bg:#0b1220;
-  --text:#e5e7eb;
-  --muted:#cbd5e1;
-  --border:#334155;
-  --tile-bg:#111827;
-  --footer-bg:#0b1220;
-  --shadow:0 6px 18px rgba(0,0,0,0.35);
-  --shadow-hover:0 10px 24px rgba(0,0,0,0.45);
+:root[data-theme="dark"] {
+  --bg: #0f172a;               /* Dark slate blue background */
+  --text: #f1f5f9;             /* Near-white text */
+  --muted: #94a3b8;            /* Softer gray, still readable */
+  --border: #475569;           /* Mid-gray border */
+  --tile-bg: #1e293b;          /* Card/tile background */
+  --footer-bg: #0f172a;        /* Match page bg */
+  --shadow: 0 6px 18px rgba(0,0,0,0.5);
+  --shadow-hover: 0 10px 24px rgba(0,0,0,0.6);
+
+  /* Accent colors */
+  --accent: #3b82f6;           /* Bright blue for links/buttons */
+  --accent-hover: #2563eb;     /* Slightly deeper blue */
+  --secondary: #facc15;        /* Yellow accent for “ghost/secondary” */
 }
 
 @media (prefers-color-scheme: dark){
