@@ -1,10 +1,12 @@
 // assets/js/theme.js
-(function(){
+(function () {
   const KEY = 'bc_theme';
   const docEl = document.documentElement;
   const btn = document.getElementById('theme-toggle');
+  const label = btn ? btn.querySelector('.theme-label') : null;
 
-  // Decide initial theme
+  function log(...args){ try{ console.log('[theme]', ...args); }catch(_){} }
+
   function getPreferredTheme(){
     const saved = localStorage.getItem(KEY);
     if (saved === 'light' || saved === 'dark') return saved;
@@ -14,11 +16,15 @@
 
   function applyTheme(theme){
     if (theme === 'dark'){
-      docEl.setAttribute('data-theme','dark');
+      docEl.setAttribute('data-theme', 'dark');
       if (btn) btn.setAttribute('aria-pressed','true');
+      if (label) label.textContent = 'Light mode';
+      log('applied', theme);
     } else {
       docEl.removeAttribute('data-theme');
       if (btn) btn.setAttribute('aria-pressed','false');
+      if (label) label.textContent = 'Dark mode';
+      log('applied', theme);
     }
   }
 
@@ -27,25 +33,20 @@
 
   if (btn){
     btn.addEventListener('click', () => {
-      const nowDark = docEl.getAttribute('data-theme') !== 'dark';
-      const next = nowDark ? 'dark' : 'light';
+      const next = docEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       localStorage.setItem(KEY, next);
       applyTheme(next);
     });
+  } else {
+    log('toggle button not found');
   }
 
-  // Keep in sync if user changes system theme and no explicit choice saved
   if (!localStorage.getItem(KEY) && window.matchMedia){
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    mq.addEventListener('change', e => {
-      applyTheme(e.matches ? 'dark' : 'light');
-    });
+    mq.addEventListener('change', e => applyTheme(e.matches ? 'dark' : 'light'));
   }
 
-  // Sync across tabs
   window.addEventListener('storage', (e) => {
-    if (e.key === KEY && e.newValue){
-      applyTheme(e.newValue);
-    }
+    if (e.key === KEY && e.newValue) applyTheme(e.newValue);
   });
 })();
