@@ -1,27 +1,109 @@
 /* ========================
    Theme variables
 ======================== */
-:root {
-  --surface: #ffffff;
-  --border: rgba(2, 6, 23, 0.08);
-  --text: #0b1220;
-  --primary: #2563eb;
-  --primary-hover: #1e40af;
-  --primary-active: #1d4ed8;
-  --secondary-bg: #f3f4f6;
-  --secondary-text: #111827;
-  --secondary-hover: #e5e7eb;
-  --danger: #dc2626;
-  --danger-hover: #b91c1c;
+/* Global layout resilience */
+*, *::before, *::after { box-sizing: border-box; }
+img, svg, video { max-width: 100%; height: auto; display: block; }
+
+:root{
+  /* Neutrals (light mode) */
+  --bg-0: #f7f8fc;           /* page background */
+  --bg-1: #ffffff;           /* cards/surfaces */
+  --bg-2: #f2f4fa;           /* subtle sections */
+  --line: #e5e9f2;           /* borders/separators */
+
+  --text-0: #0b1020;         /* primary text */
+  --text-1: #2a3352;         /* secondary text */
+  --text-2: #5b6a8c;         /* muted */
+
+  /* Brand – electric violet */
+  --brand-400: #7b66ff;
+  --brand-500: #6a54ff;
+  --brand-600: #5b45f1;
+  --brand-700: #4a37d5;
+
+  /* Utility accents (neon-ish) */
+  --acc-cyan:    #22d3ee;
+  --acc-emerald: #10b981;
+  --acc-pink:    #ec4899;
+  --acc-indigo:  #8b5cf6;
+
+  /* Buttons (light) */
+  --btn-fg: #ffffff;
+  --btn-bg: var(--brand-600);
+  --btn-bg-hover: #6e5bff;
+  --btn-bg-active: #5b45f1;
+  --btn-ghost-fg: var(--brand-600);
+  --btn-ghost-hover: rgba(91,69,241,0.10);
+
+  /* Cards (light) */
+  --card-bg: #ffffff;
+  --card-ring: rgba(18,16,46,0.06);
+  --card-shadow: 0 10px 30px rgba(18,16,46,0.08);
+
+  /* --- Aliases for components (light) --- */
+  --surface: var(--bg-0);
+  --border: var(--line);
+  --text: var(--text-0);
+  --secondary-bg: var(--bg-1);
+  --secondary-text: var(--text-0);
+  --secondary-hover: #eef2ff;
+
+  /* Primary & danger alias tokens (light) */
+  --primary: var(--brand-600);
+  --primary-hover: var(--btn-bg-hover);
+  --primary-active: var(--btn-bg-active);
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+
+  /* Ghost states (light) */
+  --btn-ghost-active: rgba(91,69,241,0.18);
 }
 
-[data-theme="dark"] {
-  --surface: #0f172a;
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #e5e7eb;
-  --secondary-bg: #1f2937;
-  --secondary-text: #f9fafb;
-  --secondary-hover: #374151;
+/* Dark theme */
+.theme-dark{
+  --bg-0: #0b1020;           /* deep navy */
+  --bg-1: #121831;           /* surfaces */
+  --bg-2: #11172d;
+  --line: #26304b;
+
+  --text-0: #e8ecf8;         /* primary text */
+  --text-1: #c8d1ea;         /* secondary */
+  --text-2: #92a0c6;         /* muted */
+
+  --brand-400: #7b87ff;
+  --brand-500: #7a6dff;
+  --brand-600: #6a54ff;      /* same brand but pops on dark */
+  --brand-700: #5944e1;
+
+  --btn-fg: #ffffff;
+  --btn-bg: var(--brand-600);
+  --btn-bg-hover: #7a6dff;
+  --btn-bg-active: #5b45f1;
+  --btn-ghost-fg: #cdd6ff;
+  --btn-ghost-hover: rgba(122,109,255,0.15);
+
+  --card-bg: #161d36;
+  --card-ring: rgba(122,109,255,0.16);
+  --card-shadow: 0 18px 45px rgba(6,9,22,0.55);
+
+  /* --- Aliases for components (dark) --- */
+  --surface: var(--bg-0);
+  --border: var(--line);
+  --text: var(--text-0);
+  --secondary-bg: var(--bg-1);
+  --secondary-text: var(--text-0);
+  --secondary-hover: #1f243d;
+
+  /* Primary & danger alias tokens (dark) */
+  --primary: var(--brand-600);
+  --primary-hover: var(--btn-bg-hover);
+  --primary-active: var(--btn-bg-active);
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+
+  /* Ghost states (dark) */
+  --btn-ghost-active: rgba(122,109,255,0.24);
 }
 
 /* ========================
@@ -110,6 +192,35 @@ body, .site-bg {
   margin-top: 40px;
 }
 
+/* Oxaley-style hero gradient */
+.hero--gradient{
+  position: relative;
+  border-radius: 28px;
+  padding: clamp(40px, 6vw, 72px);
+  overflow: hidden;
+  background: radial-gradient(120% 140% at 50% 0%,
+              rgba(106,84,255,0.22) 0%,
+              rgba(106,84,255,0.18) 25%,
+              rgba(34,211,238,0.08) 55%,
+              transparent 70%) ,
+            linear-gradient(180deg,
+              var(--bg-0) 0%,
+              var(--bg-1) 40%,
+              var(--bg-0) 100%);
+  box-shadow: inset 0 0 0 1px rgba(123,135,255,0.10);
+}
+
+/* Slightly bolder in dark mode */
+.theme-dark .hero--gradient{
+  background: radial-gradient(120% 140% at 50% -10%,
+              rgba(106,84,255,0.35) 0%,
+              rgba(139,92,246,0.18) 35%,
+              rgba(34,211,238,0.10) 60%,
+              transparent 75%) ,
+            linear-gradient(180deg,#0b1020 0%, #0f1530 45%, #0b1020 100%);
+  box-shadow: inset 0 0 0 1px rgba(123,135,255,0.18);
+}
+
 @media (max-width: 1024px) {
   .tiles {
     grid-template-columns: repeat(2, 1fr);
@@ -195,11 +306,11 @@ body, .site-bg {
 }
 
 .btn--ghost:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: var(--btn-ghost-hover);
 }
 
 .btn--ghost:active {
-  background: rgba(37, 99, 235, 0.2);
+  background: var(--btn-ghost-active);
 }
 
 .btn-danger {
