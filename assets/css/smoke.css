@@ -8,6 +8,13 @@
   --primary: #2563eb;
   --primary-hover: #1e40af;
 
+  --btn-secondary-bg: #f4f6fb;
+  --btn-secondary-fg: #1f2937;
+  --btn-secondary-border: #cbd5e1;
+
+  --btn-ghost-fg: var(--accent);
+  --btn-ghost-border: rgba(59,130,246,.45);
+
   --emerald: #10b981;
   --indigo: #6366f1;
   --danger: #ef4444;
@@ -29,6 +36,13 @@
   --footer-bg: #0f172a;        /* Match page bg */
   --shadow: 0 6px 18px rgba(0,0,0,0.5);
   --shadow-hover: 0 10px 24px rgba(0,0,0,0.6);
+
+  --btn-secondary-bg: #1e293b;        /* readable on dark */
+  --btn-secondary-fg: #e5e7eb;        /* light text */
+  --btn-secondary-border: #475569;    /* visible rim */
+
+  --btn-ghost-fg: #e5e7eb;            /* ghost stays legible */
+  --btn-ghost-border: #64748b;        /* subtle but visible */
 
   /* Accent colors */
   --accent: #3b82f6;           /* Bright blue for links/buttons */
@@ -82,15 +96,45 @@ body.site-bg{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-app
 .cta-row{display:flex;gap:12px;flex-wrap:wrap}
 
 /* Buttons */
-.btn{display:inline-block;padding:10px 16px;border-radius:10px;text-decoration:none;font-weight:600;transition:.18s transform,.18s box-shadow,.18s background}
+.btn{display:inline-flex; align-items:center; justify-content:center;
+  font-weight:600; border-radius:12px;
+  padding:.7rem 1.1rem; line-height:1;
+  border:1px solid transparent;
+  transition:background .18s, color .18s, border-color .18s, box-shadow .18s, transform .04s;}
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn-block{display:block;width:100%;text-align:center}
 
-.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
-.btn-primary:hover{background:var(--primary-hover);box-shadow:var(--shadow-hover)}
-.btn-ghost{border:1px solid var(--border);color:var(--text);background:#fff}
-.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+/* Primary */
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.btn--primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn--primary:active { transform: translateY(0); }
+/* Secondary (fixed for dark mode) */
+.btn--secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-fg);
+  border-color: var(--btn-secondary-border);
+  box-shadow: var(--shadow);
+}
+.btn--secondary:hover {
+  border-color: color-mix(in srgb, var(--btn-secondary-border), #fff 20%);
+  transform: translateY(-1px);
+}
+.btn--secondary:active { transform: translateY(0); }
+/* Ghost */
+.btn--ghost {
+  background: transparent;
+  color: var(--btn-ghost-fg);
+  border-color: var(--btn-ghost-border);
+}
+.btn--ghost:hover {
+  background: color-mix(in srgb, var(--tile-bg, transparent), #ffffff0f 6%);
+  border-color: color-mix(in srgb, var(--btn-ghost-border), #fff 30%);
+}
 .btn-danger{background:var(--danger);color:#fff;border:none}
 
 /* Tiles */
