@@ -136,3 +136,58 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "$CF_DISTR_ID" \
             --paths "/*"
+
+      - name: Verify HSTS header (preload-compatible)
+        run: |
+          set -euo pipefail
+
+          check() {
+            domain="$1"
+            echo "Checking HSTS on https://$domain"
+
+            # Fetch response headers (with retries in case CDN is still propagating)
+            headers="$(curl -sS -D - -o /dev/null --http2 --retry 6 --retry-connrefused --retry-delay 5 "https://$domain")"
+
+            # Require header to exist
+            echo "$headers" | grep -iE '^strict-transport-security:' > /dev/null \
+              || { echo "::error::Missing Strict-Transport-Security on $domain"; exit 1; }
+
+            # Extract the header value
+            sts="$(echo "$headers" | awk -F': ' 'tolower($1)=="strict-transport-security"{print $2}' | tr -d '\r')"
+            echo "HSTS: $sts"
+
+            # Require includeSubDomains and preload
+            echo "$sts" | grep -qi 'includesubdomains' \
+              || { echo "::error::HSTS missing includeSubDomains on $domain"; exit 1; }
+            echo "$sts" | grep -qi 'preload' \
+              || { echo "::error::HSTS missing preload on $domain"; exit 1; }
+
+            # Require max-age >= 31536000
+            maxage="$(echo "$sts" | sed -n 's/.*max-age=\([0-9]\+\).*/\1/p')"
+            if [ -z "$maxage" ] || [ "$maxage" -lt 31536000 ]; then
+              echo "::error::HSTS max-age too low on $domain (got: ${maxage:-none})"
+              exit 1
+            fi
+
+            echo "OK: $domain HSTS is preload-compatible."
+          }
+
+          for d in bitcurrents.net www.bitcurrents.net; do
+            check "$d"
+          done
+
+          echo "✅ HSTS checks passed for all domains."
+
+      - name: Verify additional security headers (optional)
+        run: |
+          set -euo pipefail
+          must_have=("content-security-policy" "x-content-type-options" "referrer-policy" "x-frame-options")
+          for d in bitcurrents.net www.bitcurrents.net; do
+            echo "Checking extra security headers on https://$d"
+            headers="$(curl -sS -D - -o /dev/null --http2 --retry 6 --retry-connrefused --retry-delay 5 "https://$d" | tr -d '\r')"
+            for h in "${must_have[@]}"; do
+              echo "$headers" | grep -iE "^$h:" > /dev/null \
+                || { echo "::error::Missing required header '$h' on $d"; exit 1; }
+            done
+            echo "OK: $d extra headers present."
+          done
