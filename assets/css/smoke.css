@@ -1,233 +1,247 @@
-/* ========== Design Tokens (Palette) ========== */
-:root{
-  --bg: #f9fafb;
-  --text: #111827;
-  --muted: #4b5563;
-  --border: #e5e7eb;
-
+/* ========================
+   Theme variables
+======================== */
+:root {
+  --surface: #ffffff;
+  --border: rgba(2, 6, 23, 0.08);
+  --text: #0b1220;
   --primary: #2563eb;
   --primary-hover: #1e40af;
-
-  /* Accent colors (usable everywhere) */
-  --accent: #2563eb;
-  --accent-hover: #1e40af;
-
-  --btn-secondary-bg: #f4f6fb;
-  --btn-secondary-fg: #1f2937;
-  --btn-secondary-border: #cbd5e1;
-
-  /* Hover tunables (light) */
-  --btn-secondary-bg-hover: #e9efff;
-  --btn-secondary-fg-hover: #0f172a;
-  --btn-secondary-border-hover: #94a3b8;
-
-  --btn-ghost-bg-hover: rgba(37, 99, 235, 0.06);
-  --btn-ghost-fg-hover: var(--accent-hover);
-  --btn-ghost-border-hover: rgba(37, 99, 235, 0.55);
-
-  --btn-ghost-fg: var(--accent);
-  --btn-ghost-border: rgba(59,130,246,.45);
-
-  --emerald: #10b981;
-  --indigo: #6366f1;
-  --danger: #ef4444;
-
-  --tile-bg: #ffffff;
-  --footer-bg: #1f2937;
-
-  --radius: 12px;
-  --shadow: 0 6px 18px rgba(0,0,0,0.06);
-  --shadow-hover: 0 10px 24px rgba(0,0,0,0.08);
+  --primary-active: #1d4ed8;
+  --secondary-bg: #f3f4f6;
+  --secondary-text: #111827;
+  --secondary-hover: #e5e7eb;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
 }
 
-:root[data-theme="dark"] {
-  --bg: #0f172a;               /* Dark slate blue background */
-  --text: #f1f5f9;             /* Near-white text */
-  --muted: #94a3b8;            /* Softer gray, still readable */
-  --border: #475569;           /* Mid-gray border */
-  --tile-bg: #1e293b;          /* Card/tile background */
-  --footer-bg: #0f172a;        /* Match page bg */
-  --shadow: 0 6px 18px rgba(0,0,0,0.5);
-  --shadow-hover: 0 10px 24px rgba(0,0,0,0.6);
-
-  --btn-secondary-bg: #1e293b;        /* readable on dark */
-  --btn-secondary-fg: #e5e7eb;        /* light text */
-  --btn-secondary-border: #475569;    /* visible rim */
-
-  --btn-ghost-fg: #e5e7eb;            /* ghost stays legible */
-  --btn-ghost-border: #64748b;        /* subtle but visible */
-
-  /* Hover tunables (dark) */
-  --btn-secondary-bg-hover: #243041;       /* slightly brighter card */
-  --btn-secondary-fg-hover: #ffffff;
-  --btn-secondary-border-hover: #8a96ab;
-
-  --btn-ghost-bg-hover: rgba(148, 163, 184, 0.14); /* slate/indigo wash */
-  --btn-ghost-fg-hover: var(--accent);             /* brighten a touch */
-  --btn-ghost-border-hover: #8ea6ff;
-
-  /* Accent colors */
-  --accent: #3b82f6;           /* Bright blue for links/buttons */
-  --accent-hover: #2563eb;     /* Slightly deeper blue */
-  --secondary: #facc15;        /* Yellow accent for “ghost/secondary” */
+[data-theme="dark"] {
+  --surface: #0f172a;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e5e7eb;
+  --secondary-bg: #1f2937;
+  --secondary-text: #f9fafb;
+  --secondary-hover: #374151;
 }
 
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme]){
-    --bg: #0b1220;
-    --text: #e5e7eb;
-    --muted: #cbd5e1;
-    --border: #334155;
-    --tile-bg: #111827;
-    --footer-bg: #0b1220;
-    --shadow: 0 6px 18px rgba(0,0,0,0.35);
-    --shadow-hover: 0 10px 24px rgba(0,0,0,0.45);
-  }
+/* ========================
+   Base
+======================== */
+body, .site-bg {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.6;
 }
 
-/* Toggle button tweaks */
-.theme-toggle {
-  margin-left: 16px;
-  white-space: nowrap;
+/* ========================
+   Containers
+======================== */
+.container {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 24px;
 }
-:root[data-theme="dark"] .theme-toggle .theme-label::after{
-  content: " (on)";
+
+/* ========================
+   Header
+======================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
 }
 
-/* ========== Base ========== */
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body.site-bg{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-
-/* Layout containers: center page content */
-.container{
-  max-width: 1120px;     /* tweak to taste (e.g., 960/1200) */
-  margin-inline: auto;   /* centers the block */
-  padding-inline: 24px;  /* gutter on small screens */
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
-/* Header */
-/* Make the header span full width but keep its inner content centered */
-.site-header{
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  backdrop-filter: saturate(180%) blur(10px);
+.nav {
+  display: flex;
+  gap: 24px;
 }
 
-.brand{display:flex;align-items:center;gap:10px;font-weight:700}
-.brand-dot{width:12px;height:12px;border-radius:50%;background:var(--primary)}
-.brand-name{letter-spacing:.2px}
-.nav a{color:var(--muted);text-decoration:none;margin-left:18px}
-.nav a:hover{color:var(--primary)}
-
-/* Hero */
-.hero{padding:48px 0}
-.hero h1{margin:0 0 8px;font-size:clamp(28px,4vw,40px)}
-.hero p{margin:0 0 20px;color:var(--muted)}
-.cta-row{display:flex;gap:12px;flex-wrap:wrap}
-
-/* Buttons */
-.btn {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
-  border-radius:12px;
-  padding:.7rem 1.1rem;
-  line-height:1;
-  border:1px solid transparent;
-  transition:background .18s, color .18s, border-color .18s, box-shadow .18s, transform .04s;
+.nav a {
+  color: var(--text);
   text-decoration: none;
+  font-weight: 500;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+}
+
+/* ========================
+   Hero
+======================== */
+.hero {
+  padding-top: 32px;
+  text-align: center;
+}
+
+/* ========================
+   Tiles
+======================== */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+}
+
+@media (max-width: 1024px) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tile {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--secondary-text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.tile-accent {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--primary);
+  margin-bottom: 12px;
+}
+
+.tile-accent-emerald {
+  background: #10b981;
+}
+
+.tile-accent-indigo {
+  background: #6366f1;
+}
+
+/* ========================
+   Buttons
+======================== */
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s ease;
 }
 
-.btn:focus-visible{
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.btn:hover{transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn-block{display:block;width:100%;text-align:center}
-
-/* Primary */
 .btn--primary {
-  background: var(--accent);
+  background: var(--primary);
   color: #fff;
-  box-shadow: var(--shadow);
 }
+
 .btn--primary:hover {
-  background: var(--accent-hover);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-1px);
+  background: var(--primary-hover);
 }
 
-/* Secondary */
+.btn--primary:active {
+  background: var(--primary-active);
+}
+
 .btn--secondary {
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-fg);
-  border-color: var(--btn-secondary-border);
-  box-shadow: var(--shadow);
-}
-.btn--secondary:hover {
-  background: var(--btn-secondary-bg-hover);
-  color: var(--btn-secondary-fg-hover);
-  border-color: var(--btn-secondary-border-hover);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-1px);
+  background: var(--secondary-bg);
+  color: var(--secondary-text);
+  border: 1px solid var(--border);
 }
 
-/* Ghost */
+.btn--secondary:hover {
+  background: var(--secondary-hover);
+}
+
+.btn--secondary:active {
+  background: var(--border);
+}
+
 .btn--ghost {
   background: transparent;
-  color: var(--btn-ghost-fg);
-  border-color: var(--btn-ghost-border);
+  color: var(--primary);
+  border: 1px solid var(--primary);
 }
+
 .btn--ghost:hover {
-  background: var(--btn-ghost-bg-hover);
-  color: var(--btn-ghost-fg-hover);
-  border-color: var(--btn-ghost-border-hover);
-  text-decoration: none;
-  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.1);
 }
 
-/* Pressed state – keep after all :hover rules so it wins the cascade */
-.btn--primary:active,
-.btn--secondary:active,
 .btn--ghost:active {
-  transform: translateY(0);
+  background: rgba(37, 99, 235, 0.2);
 }
 
-/* Danger */
 .btn-danger {
   background: var(--danger);
   color: #fff;
-  border: none;
 }
 
-/* Tiles */
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin:8px 0 40px}
-.tile{background:var(--tile-bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 16px;transition:.18s transform,.18s box-shadow}
-.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
-.tile h2{margin:10px 0 8px;font-size:20px}
-.tile p{margin:0 0 10px;color:var(--muted)}
-.tile .link{color:var(--primary);text-decoration:none;font-weight:600}
-.tile .link:hover{text-decoration:underline}
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
 
-/* Accent bars */
-.tile-accent{height:6px;border-radius:8px;background:var(--primary);margin:-6px -6px 10px}
-.tile-accent-emerald{background:var(--emerald)}
-.tile-accent-indigo{background:var(--indigo)}
+.btn-danger:active {
+  background: #991b1b;
+}
 
-/* Buttons gallery */
-.buttons-gallery{margin:24px 0}
-.buttons-gallery h3{margin:0 0 12px}
-.stack{display:flex;gap:12px;flex-wrap:wrap}
+.btn-block {
+  display: block;
+  width: 100%;
+}
 
-/* Footer */
-.site-footer{background:var(--footer-bg);color:#cbd5e1;margin-top:40px}
-.footer-inner{display:flex;justify-content:space-between;align-items:center}
-.site-footer a{color:#cbd5e1;text-decoration:none;margin-left:16px}
-.site-footer a:hover{color:#fff}
+/* ========================
+   Footer
+======================== */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+  margin-top: 48px;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.footer-inner a {
+  margin-left: 16px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.footer-inner a:hover {
+  text-decoration: underline;
+}
