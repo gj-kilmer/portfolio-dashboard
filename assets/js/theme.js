@@ -1,52 +1,66 @@
-// assets/js/theme.js
-(function () {
-  const KEY = 'bc_theme';
-  const docEl = document.documentElement;
-  const btn = document.getElementById('theme-toggle');
-  const label = btn ? btn.querySelector('.theme-label') : null;
+// BitCurrents theme toggler (robust + backwards compatible)
+(() => {
+  const STORAGE_KEY = 'bc-theme';
+  const root = document.documentElement;
+  const body = document.body;
 
-  function log(...args){ try{ console.log('[theme]', ...args); }catch(_){} }
-
-  function getPreferredTheme(){
-    const saved = localStorage.getItem(KEY);
-    if (saved === 'light' || saved === 'dark') return saved;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark' : 'light';
+  // pick the toggle button by data attribute or class
+  function getToggleBtn() {
+    return document.querySelector('[data-theme-toggle], .theme-toggle');
   }
 
-  function applyTheme(theme){
-    if (theme === 'dark'){
-      docEl.setAttribute('data-theme', 'dark');
-      if (btn) btn.setAttribute('aria-pressed','true');
-      if (label) label.textContent = 'Light mode';
-      log('applied', theme);
-    } else {
-      docEl.removeAttribute('data-theme');
-      if (btn) btn.setAttribute('aria-pressed','false');
-      if (label) label.textContent = 'Dark mode';
-      log('applied', theme);
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function resolveTheme(input) {
+    if (input === 'dark' || input === 'light') return input;
+    return systemPrefersDark() ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    const t = resolveTheme(theme);
+
+    // Support both strategies to match any existing CSS:
+    // 1) attribute on :root (html)  2) .dark class on root/body
+    root.setAttribute('data-theme', t);
+    root.classList.toggle('dark', t === 'dark');
+    body.classList.toggle('dark', t === 'dark');
+
+    // Update button label if present
+    const btn = getToggleBtn();
+    const label = btn?.querySelector('.theme-label') || btn;
+    if (label) {
+      label.textContent = t === 'dark' ? 'Light mode (on)' : 'Dark mode';
     }
   }
 
-  const initial = getPreferredTheme();
-  applyTheme(initial);
-
-  if (btn){
-    btn.addEventListener('click', () => {
-      const next = docEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      localStorage.setItem(KEY, next);
-      applyTheme(next);
-    });
-  } else {
-    log('toggle button not found');
+  function currentTheme() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === 'dark' || stored === 'light') return stored;
+    } catch {}
+    return resolveTheme('system');
   }
 
-  if (!localStorage.getItem(KEY) && window.matchMedia){
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    mq.addEventListener('change', e => applyTheme(e.matches ? 'dark' : 'light'));
-  }
+  // Initial paint
+  applyTheme(currentTheme());
 
-  window.addEventListener('storage', (e) => {
-    if (e.key === KEY && e.newValue) applyTheme(e.newValue);
+  // Wire click handler
+  const btn = getToggleBtn();
+  btn?.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
   });
+
+  // If user didn't explicitly choose, track system changes
+  try {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener?.('change', (e) => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === 'dark' || stored === 'light') return; // user choice wins
+      applyTheme(e.matches ? 'dark' : 'light');
+    });
+  } catch {}
 })();
