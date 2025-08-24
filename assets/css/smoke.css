@@ -182,9 +182,55 @@ body, .site-bg {
   text-align: center;
 }
 
+/* Hero gradient (brand sweep) */
+.hero--gradient {
+  /* inner glow + long sweep */
+  background:
+    radial-gradient(140% 180% at 50% -20%,
+      color-mix(in srgb, var(--brand-600) 28%, transparent) 0%,
+      color-mix(in srgb, var(--acc-indigo) 22%, transparent) 38%,
+      color-mix(in srgb, var(--acc-cyan) 16%, transparent) 64%,
+      transparent 78%
+    ),
+    linear-gradient(135deg, var(--brand-600) 0%, var(--acc-cyan) 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 56px 28px;
+  box-shadow: 0 22px 44px rgba(6,9,22,0.18);
+}
+.hero--gradient a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.theme-dark .hero--gradient {
+  background:
+    radial-gradient(140% 180% at 50% -20%,
+      color-mix(in srgb, var(--brand-600) 36%, transparent) 0%,
+      color-mix(in srgb, var(--acc-indigo) 26%, transparent) 38%,
+      color-mix(in srgb, var(--acc-cyan) 18%, transparent) 64%,
+      transparent 78%
+    ),
+    linear-gradient(135deg, var(--brand-700) 0%, var(--acc-indigo) 85%);
+}
+
 /* ========================
    Tiles
 ======================== */
+/* Tiles grid layout */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  align-items: stretch;
+}
+@media (max-width: 1024px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .tiles { grid-template-columns: 1fr; }
+}
+
 /* Gradient tiles (match hero vibe) */
 .tile {
   /* layered gradient similar to .hero--gradient but tighter */
