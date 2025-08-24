@@ -356,3 +356,39 @@ body, .site-bg {
 .footer-inner a:hover {
   text-decoration: underline;
 }
+
+/* ========================
+   A11Y & polish
+======================== */
+/* Keyboard focus visibility */
+:where(a, button, .btn):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* Current page indicator in primary nav */
+.nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+
+/* Strong-link helper used in tiles */
+.link-strong {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.link-strong:hover {
+  text-decoration: underline;
+}
+
+/* Prefer-reduced-motion: tone down transitions */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
