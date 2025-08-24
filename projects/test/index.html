@@ -1,92 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BitCurrents Portfolio</title>
-  <link rel="stylesheet" href="/assets/css/smoke.css" />
-  <script defer src="/assets/js/theme.js"></script>
-</head>
-<body class="site-bg">
+// BitCurrents theme toggler
+(function () {
+  const STORAGE_KEY = 'bc_theme';
+  const root = document.documentElement;
 
-  <!-- Header -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <span class="brand-dot"></span>
-        <span class="brand-name">BitCurrents</span>
-      </div>
+  function getStoredTheme() {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (_) {
+      return null;
+    }
+  }
 
-      <nav class="nav">
-        <a href="/" aria-current="page">Home</a>
-        <a href="/about/">About</a>
-        <a href="/projects/">Projects</a>
-        <a href="/contact/">Contact</a>
-      </nav>
+  function storeTheme(theme) {
+    try {
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch (_) {
+      /* ignore */
+    }
+  }
 
-      <button class="btn btn--secondary theme-toggle" type="button">
-        <span class="theme-label">Dark mode</span>
-      </button>
-    </div>
-  </header>
-  <main>
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
 
-  <!-- Hero -->
-  <section class="hero container hero--gradient">
-    <h1>Clean · Modern · Professional</h1>
-    <p>Palette + components demo (non-stuffy). This sandbox previews tiles, buttons, and typography.</p>
-    <div class="cta-row">
-      <a class="btn btn--primary" href="#">Primary Action</a>
-      <a class="btn btn--secondary" href="#">Secondary</a>
-    </div>
-  </section>
+  function applyTheme(theme) {
+    const isDark = theme === 'dark';
+    root.classList.toggle('theme-dark', isDark);
 
-  <!-- Tiles -->
-  <section class="container tiles">
-    <div class="tile">
-      <div class="tile-accent"></div>
-      <h2>About Me</h2>
-      <p>Leadership philosophy + experience snapshot. Private resume flow gated by email.</p>
-      <a class="link-strong" href="#">Preview</a>
-    </div>
-    <div class="tile">
-      <div class="tile-accent tile-accent-emerald"></div>
-      <h2>Projects</h2>
-      <p>Hands-on demos: data pipelines, observability, and Python full-stack samples.</p>
-      <a class="link-strong" href="#">View Projects</a>
-    </div>
-    <div class="tile">
-      <div class="tile-accent tile-accent-indigo"></div>
-      <h2>Notes</h2>
-      <p>Short write-ups on delivery, infra, and reliability decisions.</p>
-      <a class="link-strong" href="#">Read Notes</a>
-    </div>
-  </section>
+    const btn = document.querySelector('.theme-toggle');
+    const label = btn ? btn.querySelector('.theme-label') : null;
 
-  <!-- Buttons Gallery -->
-  <section class="container buttons-gallery">
-    <h3>Buttons</h3>
-    <div class="stack">
-      <a class="btn btn--primary" href="#">Primary</a>
-      <a class="btn btn--ghost" href="#">Ghost</a>
-      <button class="btn btn-danger" type="button">Danger</button>
-    </div>
+    if (btn) btn.setAttribute('aria-pressed', String(isDark));
+    if (label) label.textContent = isDark ? 'Light mode' : 'Dark mode';
+  }
 
-    <p style="text-align:center;margin-top:24px">
-      <a class="btn btn--primary btn-block" href="#">Primary (Block)</a>
-    </p>
-  </section>
-  </main>
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>&copy; 2025 BitCurrents</p>
-      <div>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-      </div>
-    </div>
-  </footer>
+  function currentTheme() {
+    const stored = getStoredTheme();
+    if (stored === 'dark' || stored === 'light') return stored;
+    return systemPrefersDark() ? 'dark' : 'light';
+  }
 
-</body>
-</html>
+  function init() {
+    // Apply initial
+    applyTheme(currentTheme());
+
+    // Wire up toggle
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        const now = root.classList.contains('theme-dark') ? 'dark' : 'light';
+        const next = now === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        storeTheme(next);
+      });
+    }
+
+    // React to OS changes dynamically (optional)
+    if (window.matchMedia) {
+      const m = window.matchMedia('(prefers-color-scheme: dark)');
+      if (typeof m.addEventListener === 'function') {
+        m.addEventListener('change', () => {
+          // Only auto-switch if user hasn't explicitly chosen
+          if (!getStoredTheme()) applyTheme(currentTheme());
+        });
+      } else if (typeof m.addListener === 'function') {
+        // Safari < 14
+        m.addListener(() => {
+          if (!getStoredTheme()) applyTheme(currentTheme());
+        });
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
