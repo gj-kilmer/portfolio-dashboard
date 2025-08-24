@@ -1,140 +1,208 @@
-/* ========================
-   Hero
-======================== */
-.hero {
-  padding-top: 32px;
-  text-align: center;
+/* ==========================================================================
+   BitCurrents UI – tokens, base, layout, components
+   ========================================================================== */
+
+/* ---------- Color tokens ---------- */
+:root{
+  /* surfaces */
+  --bg: #0f172a;               /* slate-900 */
+  --bg-elev-1:#111827;         /* slate-800 */
+  --bg-elev-2:#1f2937;         /* slate-700 */
+  --panel:#0b1224;             /* deep navy used previously */
+
+  /* text */
+  --text:#e5e7eb;              /* slate-200 */
+  --text-dim:#b6c2d8;          /* light steel */
+  --muted:#94a3b8;             /* slate-400 */
+
+  /* brand + accents */
+  --brand-600:#2563eb;         /* primary blue */
+  --brand-700:#1d4ed8;
+  --brand-800:#1e40af;
+  --acc-cyan:#22d3ee;
+  --acc-indigo:#6366f1;
+  --acc-emerald:#34d399;
+
+  /* borders */
+  --line: rgba(255,255,255,.08);
+  --line-strong: rgba(255,255,255,.18);
+
+  /* shadows */
+  --shadow-lg: 0 22px 44px rgba(6,9,22,.45);
+  --shadow-md: 0 14px 28px rgba(6,9,22,.35);
+  --shadow-sm: 0 8px 18px rgba(6,9,22,.28);
+
+  /* radii */
+  --r-lg:16px;
+  --r-md:12px;
+  --r-sm:10px;
 }
 
-/* Hero gradient (brand sweep) */
-.hero--gradient {
-  /* inner glow + long sweep */
+/* Light mode flips */
+html:not(.theme-dark){
+  --bg:#f6f7fb;
+  --bg-elev-1:#ffffff;
+  --bg-elev-2:#f0f3f8;
+  --panel:#ffffff;
+  --text:#0f172a;
+  --text-dim:#334155;
+  --muted:#64748b;
+  --line: rgba(2,6,23,.08);
+  --line-strong: rgba(2,6,23,.14);
+  --shadow-lg: 0 22px 44px rgba(2,6,23,.14);
+  --shadow-md: 0 14px 28px rgba(2,6,23,.12);
+  --shadow-sm: 0 8px 18px rgba(2,6,23,.10);
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.5;
+}
+a{color:var(--brand-600);text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;display:block}
+
+/* ---------- Layout ---------- */
+.page{max-width:1100px;margin:0 auto;padding:32px 20px}
+.stack-24 > * + *{margin-top:24px}
+
+/* Header */
+.site-header{
+  position:sticky;top:0;z-index:20;
+  backdrop-filter:saturate(140%) blur(10px);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border-bottom:1px solid var(--line);
+}
+.site-header .bar{max-width:1100px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand-dot{width:10px;height:10px;border-radius:999px;background:var(--brand-600);box-shadow:0 0 0 4px color-mix(in srgb, var(--brand-600) 25%, transparent)}
+.nav{margin-left:auto;display:flex;gap:22px}
+.nav a{color:var(--text-dim)}
+.nav a:hover{color:var(--text)}
+
+/* Mode toggle knob (you already add/remove .theme-dark on <html>) */
+.mode-toggle{
+  margin-left:18px;
+  border-radius:999px;
+  padding:8px 14px;
+  background:var(--bg-elev-2);
+  color:var(--text);
+  border:1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  cursor:pointer;
+}
+.mode-toggle:hover{filter:brightness(1.05)}
+.mode-toggle:active{transform:translateY(1px)}
+
+/* ---------- Hero ---------- */
+.hero{padding-top:32px;text-align:center}
+.hero--gradient{
   background:
     radial-gradient(140% 180% at 50% -20%,
       color-mix(in srgb, var(--brand-600) 28%, transparent) 0%,
       color-mix(in srgb, var(--acc-indigo) 22%, transparent) 38%,
       color-mix(in srgb, var(--acc-cyan) 16%, transparent) 64%,
-      transparent 78%
-    ),
+      transparent 78%),
     linear-gradient(135deg, var(--brand-600) 0%, var(--acc-cyan) 100%);
-  color: #fff;
-  border-radius: 16px;
-  padding: 56px 28px;
-  box-shadow: 0 22px 44px rgba(6,9,22,0.18);
+  color:#fff;
+  border-radius:var(--r-lg);
+  padding:56px 28px;
+  box-shadow:var(--shadow-lg);
 }
-.hero--gradient a {
-  color: #fff;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.theme-dark .hero--gradient {
+.hero--gradient a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.theme-dark .hero--gradient{
   background:
     radial-gradient(140% 180% at 50% -20%,
       color-mix(in srgb, var(--brand-600) 36%, transparent) 0%,
       color-mix(in srgb, var(--acc-indigo) 26%, transparent) 38%,
       color-mix(in srgb, var(--acc-cyan) 18%, transparent) 64%,
-      transparent 78%
-    ),
+      transparent 78%),
     linear-gradient(135deg, var(--brand-700) 0%, var(--acc-indigo) 85%);
 }
 
-/* ========================
-   Tiles
-======================== */
-/* Tiles grid layout */
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  align-items: stretch;
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:40px;padding:0 18px;border-radius:10px;
+  font-weight:600;border:1px solid transparent;cursor:pointer;
+  transition:transform .06s ease, filter .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+  user-select:none; -webkit-tap-highlight-color: transparent;
 }
-@media (max-width: 1024px) {
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.btn:active{transform:translateY(1px)}
+
+.btn--primary{
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-600) 90%, white 10%) 0%, var(--brand-700) 100%);
+  color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.35);
 }
-@media (max-width: 640px) {
-  .tiles { grid-template-columns: 1fr; }
+.btn--primary:hover{filter:brightness(1.07)}
+.btn--primary:active{filter:brightness(.96)}
+
+.btn--secondary{
+  background: var(--bg-elev-1);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
 }
+html:not(.theme-dark) .btn--secondary{background:#f8fafc}
+.btn--secondary:hover{filter:brightness(1.05)}
+.btn--secondary:active{filter:brightness(.98)}
+
+.btn--ghost{
+  background:transparent;color:var(--text);border-color:var(--line);
+}
+.btn--ghost:hover{background:color-mix(in srgb, var(--brand-600) 8%, transparent)}
+.btn--danger{background:#ef4444;color:#fff}
+
+/* ---------- Tiles grid ---------- */
+.tiles{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:28px;align-items:stretch}
+@media (max-width:1024px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.tiles{grid-template-columns:1fr}}
 
 /* Gradient tiles (match hero vibe) */
-.tile {
-  /* layered gradient similar to .hero--gradient but tighter */
+.tile{
   background:
     radial-gradient(120% 140% at 50% -10%,
       color-mix(in srgb, var(--brand-600) 25%, transparent) 0%,
       color-mix(in srgb, var(--acc-indigo) 20%, transparent) 35%,
       color-mix(in srgb, var(--acc-cyan) 12%, transparent) 60%,
-      transparent 75%
-    ),
+      transparent 75%),
     linear-gradient(135deg, var(--brand-600) 0%, var(--acc-cyan) 100%);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-md);
+  padding:16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .25s ease, box-shadow .25s ease;
 }
-.tile:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25);
-}
-
-/* Slightly bolder in dark to hold up against dark background */
-.theme-dark .tile {
+.tile:hover{transform:translateY(-6px); box-shadow: var(--shadow-md)}
+.theme-dark .tile{
   background:
     radial-gradient(120% 140% at 50% -10%,
       color-mix(in srgb, var(--brand-600) 35%, transparent) 0%,
       color-mix(in srgb, var(--acc-indigo) 24%, transparent) 35%,
       color-mix(in srgb, var(--acc-cyan) 16%, transparent) 60%,
-      transparent 75%
-    ),
+      transparent 75%),
     linear-gradient(135deg, var(--brand-600) 0%, var(--acc-indigo) 80%);
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 10px 24px rgba(6,9,22,0.55);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border:1px solid var(--line-strong);
+  box-shadow: var(--shadow-md);
 }
-.theme-dark .tile:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 36px rgba(6,9,22,0.45);
-}
+.theme-dark .tile:hover{box-shadow: var(--shadow-lg)}
 
-/* Links inside tiles: keep readable and obvious */
-.tile a {
-  color: #fff;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.tile a:hover {
-  text-decoration-thickness: 2px;
-}
+.tile h3{margin:8px 0 6px;font-size:22px}
+.tile p{margin:0 0 12px;color:#eef2ff}
+.tile a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.tile a:hover{text-decoration-thickness:2px}
 
-/* Make “secondary” buttons work on a dark/gradient tile */
-.tile .btn--secondary {
-  background: transparent;
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.45);
-}
-.tile .btn--secondary:hover {
-  background: rgba(255,255,255,0.08);
-}
-.tile .btn--secondary:active {
-  background: rgba(255,255,255,0.16);
-}
+/* Hide legacy accent bars inside tiles */
+.tile-accent,.tile-accent-emerald,.tile-accent-indigo{display:none}
 
-/* Primary button on gradient tiles: bump contrast slightly */
-.tile .btn--primary {
-  background: #ffffff;
-  color: var(--brand-700);
-}
-.tile .btn--primary:hover {
-  background: #e9e9ff;
-}
-.tile .btn--primary:active {
-  background: #dcdcff;
-}
-
-/* Accent bars removed for gradient tiles */
-.tile-accent,
-.tile-accent-emerald,
-.tile-accent-indigo {
-  display: none;
-}
+/* ---------- Footer ---------- */
+.site-footer{display:flex;justify-content:space-between;gap:18px;border-top:1px solid var(--line);padding:22px 0;margin-top:36px;color:var(--muted)}
+.site-footer a{color:var(--muted)}
+.site-footer a:hover{color:var(--text)}
