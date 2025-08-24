@@ -160,9 +160,10 @@ body, .site-bg {
 }
 
 .brand-logo {
-  height: 28px;   /* adjust to fit your header */
+  height: 36px;   /* adjust to fit your header */
   width: auto;
   display: block;
+  border-radius: 6px;
 }
 .nav {
   display: flex;
