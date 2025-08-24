@@ -7,30 +7,33 @@
   <link rel="canonical" href="https://bitcurrents.net/" />
   <title>BitCurrents Portfolio</title>
   <script>
-    (function() {
+    (function () {
       try {
-        // First check if user explicitly saved a theme
+        // 1) Use explicit saved preference if present
         let theme = localStorage.getItem('theme');
 
-        if (!theme) {
-          // No saved preference → respect system preference
-          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            theme = 'dark';
-          } else {
-            theme = 'light';
-          }
+        // 2) Otherwise respect system dark preference
+        if (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          theme = 'dark';
         }
 
-        // Apply the theme before CSS loads
+        // 3) If still no theme, default to DARK
+        if (!theme) theme = 'dark';
+
+        // 4) Apply before CSS paints
         if (theme === 'dark') {
           document.documentElement.classList.add('theme-dark');
+        } else {
+          document.documentElement.classList.remove('theme-dark');
         }
       } catch (e) {
-        console.warn("Theme preload script failed", e);
+        // If anything goes wrong, default to dark so the page doesn't flash light
+        document.documentElement.classList.add('theme-dark');
       }
     })();
   </script>
-  <link rel="stylesheet" href="/assets/css/smoke.css" />
+    <link rel="icon" type="image/png" href="/assets/images/BitCurrent-favicon.png" />
+    <link rel="stylesheet" href="/assets/css/smoke.css" />
   <script defer src="/assets/js/theme.js"></script>
 </head>
 <body class="site-bg">
