@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
   <link rel="canonical" href="https://bitcurrents.net/" />
+  <script>
+  (() => {
+    try {
+      const k = 'bc_theme';
+      const v = localStorage.getItem(k);
+      const dark = v ? (v === 'dark') : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (dark) document.documentElement.classList.add('theme-dark');
+    } catch (_) {}
+  })();
+  </script>
   <title>BitCurrents Portfolio</title>
   <link rel="stylesheet" href="/assets/css/smoke.css" />
   <script defer src="/assets/js/theme.js"></script>

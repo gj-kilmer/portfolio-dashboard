@@ -185,76 +185,89 @@ body, .site-bg {
 /* ========================
    Tiles
 ======================== */
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 40px;
-}
-
-/* Oxaley-style hero gradient */
-.hero--gradient{
-  position: relative;
-  border-radius: 28px;
-  padding: clamp(40px, 6vw, 72px);
-  overflow: hidden;
-  background: radial-gradient(120% 140% at 50% 0%,
-              rgba(106,84,255,0.22) 0%,
-              rgba(106,84,255,0.18) 25%,
-              rgba(34,211,238,0.08) 55%,
-              transparent 70%) ,
-            linear-gradient(180deg,
-              var(--bg-0) 0%,
-              var(--bg-1) 40%,
-              var(--bg-0) 100%);
-  box-shadow: inset 0 0 0 1px rgba(123,135,255,0.10);
-}
-
-/* Slightly bolder in dark mode */
-.theme-dark .hero--gradient{
-  background: radial-gradient(120% 140% at 50% -10%,
-              rgba(106,84,255,0.35) 0%,
-              rgba(139,92,246,0.18) 35%,
-              rgba(34,211,238,0.10) 60%,
-              transparent 75%) ,
-            linear-gradient(180deg,#0b1020 0%, #0f1530 45%, #0b1020 100%);
-  box-shadow: inset 0 0 0 1px rgba(123,135,255,0.18);
-}
-
-@media (max-width: 1024px) {
-  .tiles {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .tiles {
-    grid-template-columns: 1fr;
-  }
-}
-
+/* Gradient tiles (match hero vibe) */
 .tile {
-  background: var(--secondary-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  /* layered gradient similar to .hero--gradient but tighter */
+  background:
+    radial-gradient(120% 140% at 50% -10%,
+      color-mix(in srgb, var(--brand-600) 25%, transparent) 0%,
+      color-mix(in srgb, var(--acc-indigo) 20%, transparent) 35%,
+      color-mix(in srgb, var(--acc-cyan) 12%, transparent) 60%,
+      transparent 75%
+    ),
+    linear-gradient(135deg, var(--brand-600) 0%, var(--acc-cyan) 100%);
+
+  color: #fff; /* ensure strong contrast on gradient */
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
   padding: 16px;
-  color: var(--secondary-text);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.tile:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25);
 }
 
-.tile-accent {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--primary);
-  margin-bottom: 12px;
+/* Slightly bolder in dark to hold up against dark background */
+.theme-dark .tile {
+  background:
+    radial-gradient(120% 140% at 50% -10%,
+      color-mix(in srgb, var(--brand-600) 35%, transparent) 0%,
+      color-mix(in srgb, var(--acc-indigo) 24%, transparent) 35%,
+      color-mix(in srgb, var(--acc-cyan) 16%, transparent) 60%,
+      transparent 75%
+    ),
+    linear-gradient(135deg, var(--brand-600) 0%, var(--acc-indigo) 80%);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 24px rgba(6,9,22,0.55);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.theme-dark .tile:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(6,9,22,0.45);
 }
 
-.tile-accent-emerald {
-  background: #10b981;
+/* Links inside tiles: keep readable and obvious */
+.tile a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tile a:hover {
+  text-decoration-thickness: 2px;
 }
 
+/* Make “secondary” buttons work on a dark/gradient tile */
+.tile .btn--secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.45);
+}
+.tile .btn--secondary:hover {
+  background: rgba(255,255,255,0.08);
+}
+.tile .btn--secondary:active {
+  background: rgba(255,255,255,0.16);
+}
+
+/* Primary button on gradient tiles: bump contrast slightly */
+.tile .btn--primary {
+  background: #ffffff;
+  color: var(--brand-700);
+}
+.tile .btn--primary:hover {
+  background: #e9e9ff;
+}
+.tile .btn--primary:active {
+  background: #dcdcff;
+}
+
+/* Accent bars removed for gradient tiles */
+.tile-accent,
+.tile-accent-emerald,
 .tile-accent-indigo {
-  background: #6366f1;
+  display: none;
 }
 
 /* ========================
