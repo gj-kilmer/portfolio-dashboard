@@ -159,6 +159,11 @@ body, .site-bg {
   background: var(--primary);
 }
 
+.brand-logo {
+  height: 28px;   /* adjust to fit your header */
+  width: auto;
+  display: block;
+}
 .nav {
   display: flex;
   gap: 24px;
