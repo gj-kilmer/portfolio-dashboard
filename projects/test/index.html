@@ -6,6 +6,30 @@
   <meta name="color-scheme" content="light dark" />
   <link rel="canonical" href="https://bitcurrents.net/" />
   <title>BitCurrents Portfolio</title>
+  <script>
+    (function() {
+      try {
+        // First check if user explicitly saved a theme
+        let theme = localStorage.getItem('theme');
+
+        if (!theme) {
+          // No saved preference → respect system preference
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            theme = 'dark';
+          } else {
+            theme = 'light';
+          }
+        }
+
+        // Apply the theme before CSS loads
+        if (theme === 'dark') {
+          document.documentElement.classList.add('theme-dark');
+        }
+      } catch (e) {
+        console.warn("Theme preload script failed", e);
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/assets/css/smoke.css" />
   <script defer src="/assets/js/theme.js"></script>
 </head>
