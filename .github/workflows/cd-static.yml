@@ -54,10 +54,19 @@ jobs:
       - name: Enforce no root-level CSS/JS
         run: |
           set -euo pipefail
-          offenders=$(find . -maxdepth 1 -type f \( -name "*.css" -o -name "*.js" \) | sed 's|^\./||')
-          if [ -n "$offenders" ]; then
+          offenders=$(
+            find . -maxdepth 1 -type f \
+              \( -name "*.css" -o -name "*.js" \) \
+              -not -name ".eleventy.js" \
+              -not -name "postcss.config.js" \
+              -not -name "tailwind.config.js" \
+              -not -name "vite.config.js" \
+              -not -name "eslint.config.js" \
+              -print | sed 's|^\./||'
+          )
+          if [ -n "${offenders}" ]; then
             echo "::error::Do not place CSS/JS in repo root. Move to assets/css or assets/js:"
-            echo "$offenders"
+            echo "${offenders}"
             exit 1
           fi
           echo "Folder structure OK."
