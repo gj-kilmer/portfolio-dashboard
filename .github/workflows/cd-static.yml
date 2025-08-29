@@ -81,14 +81,30 @@ jobs:
           npm ci
           npx @11ty/eleventy
 
-      # ⬇️ Removed the incorrect 'Upload built site (dist)' step
-
-      # Upload HTML (exclude assets; short cache)
-      - name: Upload HTML
+      - name: Hard cleanup of unwanted prefixes
+        shell: bash
         run: |
-          aws s3 sync "_site/" "s3://$S3_BUCKET" \
+          set -euo pipefail
+          # Edit this list as you like
+          DENYLIST="_site dist node_modules test projects _next www public tmp"
+      
+          for p in $DENYLIST; do
+            aws s3 rm "s3://${S3_BUCKET}/${p}" --recursive --only-show-errors || true
+          done
+
+      - name: Upload HTML (allow-list)
+        shell: bash
+        run: |
+          set -euo pipefail
+      
+          # Build output: only ship the top-level index, 404, and under-construction/*.
+          aws s3 sync _site/ "s3://${S3_BUCKET}/" \
             --delete \
-            --exclude "assets/*" \
+            --exact-timestamps \
+            --exclude "*" \
+            --include "index.html" \
+            --include "404.html" \
+            --include "under-construction/*" \
             --cache-control "public, max-age=0, must-revalidate"
 
       # Sync ALL HTML files (any depth) with correct headers (idempotent)
@@ -122,33 +138,14 @@ jobs:
               --cache-control "public, max-age=31536000, immutable"
           fi
 
-      - name: Upload assets (css/js/images/static)
+      - name: Upload CSS (smoke.css only)
+        if: ${{ hashFiles('assets/css/smoke.css') != '' }}
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -d "assets/css" ]; then
-            aws s3 sync assets/css/ "s3://$S3_BUCKET/assets/css/" \
-              --exact-timestamps \
-              --delete \
-              --cache-control "public, max-age=31536000, immutable"
-          fi
-          if [ -d "assets/js" ]; then
-            aws s3 sync assets/js/ "s3://$S3_BUCKET/assets/js/" \
-              --exact-timestamps \
-              --delete \
-              --cache-control "public, max-age=31536000, immutable"
-          fi
-          if [ -d "assets/images" ]; then
-            aws s3 sync assets/images/ "s3://$S3_BUCKET/assets/images/" \
-              --exact-timestamps \
-              --delete \
-              --cache-control "public, max-age=31536000, immutable"
-          fi
-          if [ -d "static" ]; then
-            aws s3 sync static/ "s3://$S3_BUCKET/static/" \
-              --exact-timestamps \
-              --delete \
-              --cache-control "public, max-age=31536000, immutable"
-          fi
+          aws s3 cp assets/css/smoke.css "s3://${S3_BUCKET}/assets/css/smoke.css" \
+            --content-type "text/css" \
+            --cache-control "public, max-age=31536000, immutable"
 
       - name: Invalidate CloudFront cache
         run: |
