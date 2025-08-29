@@ -57,6 +57,10 @@ jobs:
         uses: actions/setup-node@v4
         with: { node-version: '20' }
 
+      - name: Derive build id for cache-busting
+        run: |
+          echo "BUILD_ID=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
       - name: Build site (Eleventy)
         run: |
           npm ci
