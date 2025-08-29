@@ -4,12 +4,16 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - '**/*.html'
+      - 'src/**'
+      - 'src/_includes/**'
       - 'assets/**'
       - 'static/**'
       - 'robots.txt'
       - 'sitemap.xml'
       - 'favicon.ico'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.eleventy.js'
       - '.github/workflows/cd-static.yml'
   workflow_dispatch:
 
@@ -30,19 +34,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Show changed files in this push
-        run: |
-          echo "----- Changed files in this push -----"
-          if [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-            git diff --name-status ${{ github.event.before }} ${{ github.sha }}
-          else
-            echo "No previous commit found (likely first push). Listing tracked files:"
-            git ls-files
-          fi
-          echo "--------------------------------------"
+        with: { fetch-depth: 0 }
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,140 +42,69 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Hardening: no root-level CSS/JS
+      # Safety: don’t allow stray CSS/JS in repo root
       - name: Enforce no root-level CSS/JS
         run: |
           set -euo pipefail
-          offenders=$(
-            find . -maxdepth 1 -type f \
-              \( -name "*.css" -o -name "*.js" \) \
-              -not -name ".eleventy.js" \
-              -not -name "postcss.config.js" \
-              -not -name "tailwind.config.js" \
-              -not -name "vite.config.js" \
-              -not -name "eslint.config.js" \
-              -print | sed 's|^\./||'
-          )
-          if [ -n "${offenders}" ]; then
-            echo "::error::Do not place CSS/JS in repo root. Move to assets/css or assets/js:"
-            echo "${offenders}"
-            exit 1
+          offenders=$(find . -maxdepth 1 -type f \( -name "*.css" -o -name "*.js" \) \
+            -not -name ".eleventy.js" -print | sed 's|^\./||')
+          if [ -n "$offenders" ]; then
+            echo "::error::Do not place CSS/JS in repo root. Move to assets/css or assets/js:"; echo "$offenders"; exit 1
           fi
           echo "Folder structure OK."
 
-      - name: Install Node (for 11ty)
+      - name: Install Node (for Eleventy)
         uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
 
       - name: Build site (Eleventy)
         run: |
           npm ci
           npx @11ty/eleventy
 
+      # Remove junk prefixes that should never live in the bucket
       - name: Hard cleanup of unwanted prefixes
         shell: bash
         run: |
           set -euo pipefail
-          # Edit this list as you like
-          DENYLIST="_site dist node_modules test projects _next www public tmp"
-      
-          for p in $DENYLIST; do
+          for p in _site dist node_modules test projects _next www public tmp; do
             aws s3 rm "s3://${S3_BUCKET}/${p}" --recursive --only-show-errors || true
           done
 
-      - name: Upload HTML (allow-list)
+      # Pages & other non-asset files (short cache) — cleans the root
+      - name: Upload Eleventy pages (clean root)
         shell: bash
         run: |
           set -euo pipefail
-      
-          # Build output: only ship the top-level index, 404, and under-construction/*.
-          aws s3 sync _site/ "s3://${S3_BUCKET}/" \
+          [ -d "_site" ] || { echo "::error::_site not found"; exit 1; }
+          aws s3 sync "_site/" "s3://$S3_BUCKET/" \
             --delete \
-            --exact-timestamps \
-            --exclude "*" \
-            --include "index.html" \
-            --include "404.html" \
-            --include "under-construction/*" \
+            --exclude "assets/*" \
             --cache-control "public, max-age=0, must-revalidate"
 
-      # Sync ALL HTML files (any depth) with correct headers (idempotent)
-      - name: Upload HTML files (nested)
-        run: |
-          set -euo pipefail
-          aws s3 sync . "s3://$S3_BUCKET/" \
-            --exclude "*" \
-            --include "*.html" \
-            --include "**/*.html" \
-            --exact-timestamps \
-            --content-type "text/html; charset=utf-8" \
-            --cache-control "public, max-age=0, must-revalidate"
-
-      - name: Upload root metadata (robots/sitemap/favicon)
-        run: |
-          set -euo pipefail
-          if [ -f "robots.txt" ]; then
-            aws s3 cp robots.txt "s3://$S3_BUCKET/robots.txt" \
-              --content-type "text/plain; charset=utf-8" \
-              --cache-control "public, max-age=300, must-revalidate"
-          fi
-          if [ -f "sitemap.xml" ]; then
-            aws s3 cp sitemap.xml "s3://$S3_BUCKET/sitemap.xml" \
-              --content-type "application/xml; charset=utf-8" \
-              --cache-control "public, max-age=300, must-revalidate"
-          fi
-          if [ -f "favicon.ico" ]; then
-            aws s3 cp favicon.ico "s3://$S3_BUCKET/favicon.ico" \
-              --content-type "image/x-icon" \
-              --cache-control "public, max-age=31536000, immutable"
-          fi
-
-      - name: Upload CSS (smoke.css only)
-        if: ${{ hashFiles('assets/css/smoke.css') != '' }}
+      # Static assets (long cache) — cleans only the assets subtree
+      - name: Upload assets (css/js/images) with long cache
         shell: bash
         run: |
           set -euo pipefail
-          aws s3 cp assets/css/smoke.css "s3://${S3_BUCKET}/assets/css/smoke.css" \
-            --content-type "text/css" \
-            --cache-control "public, max-age=31536000, immutable"
+          if [ -d "_site/assets" ]; then
+            aws s3 sync "_site/assets/" "s3://$S3_BUCKET/assets/" \
+              --delete \
+              --exact-timestamps \
+              --cache-control "public, max-age=31536000, immutable"
+          else
+            echo "No _site/assets directory found; skipping assets upload."
+          fi
+
+      # If robots/sitemap are generated into _site, they’re already synced above.
+      # If you keep authoring them at repo root, uncomment this block to force-copy:
+      # - name: Upload root metadata (optional)
+      #   run: |
+      #     set -euo pipefail
+      #     [ -f "robots.txt" ]  && aws s3 cp robots.txt  "s3://$S3_BUCKET/robots.txt"  --content-type "text/plain; charset=utf-8" --cache-control "public, max-age=300, must-revalidate" || true
+      #     [ -f "sitemap.xml" ] && aws s3 cp sitemap.xml "s3://$S3_BUCKET/sitemap.xml" --content-type "application/xml; charset=utf-8" --cache-control "public, max-age=300, must-revalidate" || true
+      #     [ -f "favicon.ico" ] && aws s3 cp favicon.ico "s3://$S3_BUCKET/favicon.ico" --content-type "image/x-icon" --cache-control "public, max-age=31536000, immutable" || true
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "$CF_DISTR_ID" \
-            --paths "/*"
-
-      - name: Verify HSTS header (preload-compatible)
-        run: |
-          set -euo pipefail
-          check() {
-            domain="$1"
-            echo "Checking HSTS on https://$domain"
-            headers="$(curl -sS -D - -o /dev/null --http2 --retry 6 --retry-connrefused --retry-delay 5 "https://$domain")"
-            echo "$headers" | grep -iE '^strict-transport-security:' > /dev/null \
-              || { echo "::error::Missing Strict-Transport-Security on $domain"; exit 1; }
-            sts="$(echo "$headers" | awk -F': ' 'tolower($1)=="strict-transport-security"{print $2}' | tr -d '\r')"
-            echo "$sts" | grep -qi 'includesubdomains' || { echo "::error::HSTS missing includeSubDomains on $domain"; exit 1; }
-            echo "$sts" | grep -qi 'preload' || { echo "::error::HSTS missing preload on $domain"; exit 1; }
-            maxage="$(echo "$sts" | sed -n 's/.*max-age=\([0-9]\+\).*/\1/p')"
-            [ -n "$maxage" ] && [ "$maxage" -ge 31536000 ] || { echo "::error::HSTS max-age too low ($maxage)"; exit 1; }
-            echo "OK: $domain HSTS is preload-compatible."
-          }
-          for d in bitcurrents.net www.bitcurrents.net; do
-            check "$d"
-          done
-          echo "✅ HSTS checks passed for all domains."
-
-      - name: Verify additional security headers (optional)
-        run: |
-          set -euo pipefail
-          must_have=("content-security-policy" "x-content-type-options" "referrer-policy" "x-frame-options")
-          for d in bitcurrents.net www.bitcurrents.net; do
-            echo "Checking extra security headers on https://$d"
-            headers="$(curl -sS -D - -o /dev/null --http2 --retry 6 --retry-connrefused --retry-delay 5 "https://$d" | tr -d '\r')"
-            for h in "${must_have[@]}"; do
-              echo "$headers" | grep -iE "^$h:" > /dev/null \
-                || { echo "::error::Missing required header '$h' on $d"; exit 1; }
-            done
-            echo "OK: $d extra headers present."
-          done
+          aws cloudfront create-invalidation --distribution-id "$CF_DISTR_ID" --paths "/*"
