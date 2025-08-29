@@ -1,49 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Page Not Found | BitCurrents</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-      background-color: #f9fafb;
-      color: #111827;
-    }
-    h1 {
-      font-size: 3rem;
-      margin: 0.5rem 0;
-    }
-    p {
-      margin: 0.5rem 0 1.5rem;
-      font-size: 1.2rem;
-      color: #4b5563;
-    }
-    a {
-      display: inline-block;
-      padding: 0.6rem 1.2rem;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 0.375rem;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    a:hover {
-      background: #1e40af;
-    }
-  </style>
+
+  <script>
+    (function () {
+      try {
+        let theme = localStorage.getItem('theme');
+        if (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+        if (!theme) theme = 'dark';
+        if (theme === 'dark') document.documentElement.classList.add('theme-dark');
+        else document.documentElement.classList.remove('theme-dark');
+      } catch (e) { document.documentElement.classList.add('theme-dark'); }
+    })();
+  </script>
+
+  <link rel="icon" type="image/png" href="/assets/images/BitCurrent-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/smoke.css" />
+  <script defer src="/assets/js/theme.js"></script>
 </head>
-<body>
-  <h1>404</h1>
-  <p>Sorry, the page you’re looking for can’t be found.</p>
-  <a href="/">Back to Home</a>
+<body class="site-bg">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <img src="/assets/images/BitCurrent-latest.png" alt="BitCurrents logo" class="brand-logo" />
+        <span class="brand-name">BitCurrents</span>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/about/">About</a>
+        <a href="/projects/">Projects</a>
+        <a href="/contact/">Contact</a>
+      </nav>
+
+      <button class="btn btn--secondary theme-toggle" type="button">
+        <span class="theme-label">Dark mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="hero container hero--gradient" style="min-height: 48vh; display:flex; flex-direction:column; justify-content:center;">
+      <h1>404 — Not Found</h1>
+      <p>The page you were looking for doesn’t exist or has moved.</p>
+      <div class="cta-row">
+        <a class="btn btn--primary" href="/">Go Home</a>
+        <a class="btn btn--secondary" href="/projects/">Explore Projects</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2025 BitCurrents</p>
+      <div>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

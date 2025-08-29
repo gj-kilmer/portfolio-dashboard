@@ -1,0 +1,65 @@
+{# src/_includes/partials/head.njk #}
+<head>
+  <!-- Core meta -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+
+  {# SEO basics #}
+  <title>{{ title or site.title }}</title>
+  {% set canon = (site.url or '') + (page.url or '/') %}
+  <link rel="canonical" href="{{ canon }}" />
+
+  <meta name="description" content="{{ description or site.description }}" />
+
+  {# Open Graph / Twitter (optional but nice) #}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ title or site.title }}" />
+  <meta property="og:description" content="{{ description or site.description }}" />
+  <meta property="og:url" content="{{ canon }}" />
+  {% if site.ogImage %}<meta property="og:image" content="{{ site.ogImage }}" />{% endif %}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ title or site.title }}" />
+  <meta name="twitter:description" content="{{ description or site.description }}" />
+  {% if site.ogImage %}<meta name="twitter:image" content="{{ site.ogImage }}" />{% endif %}
+
+  {# Favicons #}
+  <link rel="icon" type="image/png" href="/assets/images/BitCurrent-favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/images/BitCurrent-favicon.png" />
+
+  {# Optional: preconnect to CDN if you have one (safe to leave if not) #}
+  {% if site.cdn %}
+    <link rel="preconnect" href="{{ site.cdn }}" crossorigin />
+  {% endif %}
+
+  {# ---- THEME PREFLIGHT (no-flash) ----
+     1) Respect saved setting
+     2) Else follow system dark
+     3) Else default to dark
+     Apply .theme-dark to <html> BEFORE CSS paints. #}
+<!-- theme preflight (keep inline and above CSS) -->
+<!-- theme preflight (keep inline and above CSS) -->
+
+  <script>
+    (function () {
+      try {
+        let t = localStorage.getItem('theme');
+        if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+        if (!t) t = 'dark';
+        if (t === 'dark') document.documentElement.classList.add('theme-dark');
+        else document.documentElement.classList.remove('theme-dark');
+      } catch (e) {
+        document.documentElement.classList.add('theme-dark');
+      }
+    })();
+  </script>
+
+  {# Load theme toggler BEFORE CSS so first paint is correct #}
+  <script src="/assets/js/theme-preload.js" defer></script>
+
+  {# Site CSS #}
+  <link rel="stylesheet" href="/assets/css/smoke.css" />
+
+  {# Hook for page-specific additions if needed #}
+  {% block head_extra %}{% endblock %}
+</head>

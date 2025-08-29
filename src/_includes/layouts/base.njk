@@ -1,0 +1,26 @@
+{# src/_includes/layouts/base.njk #}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {# head.njk must contain:
+       1) <script src="/assets/js/theme-preload.js"></script>  (NO defer)
+       2) <link rel="stylesheet" href="/assets/css/smoke.css">
+       3) meta tags, favicon, etc.
+    #}
+    {% include "partials/head.njk" %}
+  </head>
+  <body class="site-bg">
+    {# Header with .theme-toggle button #}
+    {% include "partials/header.njk" %}
+
+    <main id="content" class="page">
+      {# Page content goes here #}
+      {{ content | safe }}
+    </main>
+
+    {% include "partials/footer.njk" %}
+    {# footer.njk must contain:
+       <script src="/assets/js/theme.js"></script>  (no defer needed; end of body is fine)
+    #}
+  </body>
+</html>

@@ -62,6 +62,27 @@ jobs:
           fi
           echo "Folder structure OK."
 
+      - name: Install Node (for 11ty)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build site (Eleventy)
+        run: |
+          npm ci
+          npx @11ty/eleventy
+
+      # Upload everything from dist (keeps your nested files)
+      - name: Upload built site
+        run: |
+          aws s3 sync dist "s3://${S3_BUCKET}" --delete --acl private
+
+      # then replace sync sources from "." to "./_site"
+      - name: Upload HTML
+        run: aws s3 sync "_site" "s3://${{ env.S3_BUCKET }}" \
+          --delete --cache-control "public, max-age=0, must-revalidate" \
+          --exclude "assets/*"
+
       # ----- Sync ALL HTML files (any depth) with correct headers -----
       # Note: sync applies headers only on uploaded/changed files.
       - name: Upload HTML files (nested)

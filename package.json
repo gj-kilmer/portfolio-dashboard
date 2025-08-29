@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-dashboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx @11ty/eleventy",
+    "serve": "npx @11ty/eleventy --serve",
+    "clean": "rimraf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gj-kilmer/portfolio-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gj-kilmer/portfolio-dashboard/issues"
+  },
+  "homepage": "https://github.com/gj-kilmer/portfolio-dashboard#readme",
+  "description": "",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2"
+  }
+}
