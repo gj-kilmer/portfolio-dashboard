@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {# head.njk must contain:
-       1) <script src="/assets/js/theme-preload.js"></script>  (NO defer)
-       2) <link rel="stylesheet" href="/assets/css/smoke.css">
-       3) meta tags, favicon, etc.
+    {# head.njk must include, in this order:
+         1) <script src="/assets/js/theme-preload.js"></script>  (NO defer; must come before CSS)
+         2) <link rel="stylesheet" href="/assets/css/smoke.css">
+         3) meta tags, favicon, etc.
     #}
     {% include "partials/head.njk" %}
   </head>
@@ -19,8 +19,9 @@
     </main>
 
     {% include "partials/footer.njk" %}
-    {# footer.njk must contain:
-       <script src="/assets/js/theme.js"></script>  (no defer needed; end of body is fine)
+    {# footer.njk must include at the end of <body>:
+         <script src="/assets/js/theme.js" defer></script>
+         {# Optionally: <script src="/assets/js/app.js" defer></script> #}
     #}
   </body>
 </html>

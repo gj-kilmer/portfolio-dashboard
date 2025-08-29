@@ -40,22 +40,8 @@
 <!-- theme preflight (keep inline and above CSS) -->
 <!-- theme preflight (keep inline and above CSS) -->
 
-  <script>
-    (function () {
-      try {
-        let t = localStorage.getItem('theme');
-        if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
-        if (!t) t = 'dark';
-        if (t === 'dark') document.documentElement.classList.add('theme-dark');
-        else document.documentElement.classList.remove('theme-dark');
-      } catch (e) {
-        document.documentElement.classList.add('theme-dark');
-      }
-    })();
-  </script>
-
   {# Load theme toggler BEFORE CSS so first paint is correct #}
-  <script src="/assets/js/theme-preload.js?v={{ build.id }}" defer></script>
+  <script src="/assets/js/theme-preload.js?v={{ build.id }}"></script>
 
   {# Site CSS #}
   <link rel="stylesheet" href="/assets/css/smoke.css" />
