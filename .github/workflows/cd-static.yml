@@ -18,10 +18,10 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION:   us-east-1     # e.g., us-east-1
-  AWS_ROLE_ARN: arn:aws:iam::911902230696:role/GitHubActions-StaticDeployer   # OIDC-assumable role
-  S3_BUCKET:    bitcurrents.net      # e.g., bitcurrents.net
-  CF_DISTR_ID:  E3NP32DM80HARU    # CloudFront distribution ID
+  AWS_REGION:   us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::911902230696:role/GitHubActions-StaticDeployer
+  S3_BUCKET:    bitcurrents.net
+  CF_DISTR_ID:  E3NP32DM80HARU
 
 jobs:
   deploy:
@@ -50,7 +50,7 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ----- Hardening: no root-level CSS/JS -----
+      # Hardening: no root-level CSS/JS
       - name: Enforce no root-level CSS/JS
         run: |
           set -euo pipefail
@@ -81,29 +81,27 @@ jobs:
           npm ci
           npx @11ty/eleventy
 
-      # Upload everything from dist (keeps your nested files)
-      - name: Upload built site
-        run: |
-          aws s3 sync dist "s3://${S3_BUCKET}" --delete --acl private
+      # ⬇️ Removed the incorrect 'Upload built site (dist)' step
 
-      # then replace sync sources from "." to "./_site"
+      # Upload HTML (exclude assets; short cache)
       - name: Upload HTML
-        run: aws s3 sync "_site" "s3://${{ env.S3_BUCKET }}" \
-          --delete --cache-control "public, max-age=0, must-revalidate" \
-          --exclude "assets/*"
+        run: |
+          aws s3 sync "_site/" "s3://$S3_BUCKET" \
+            --delete \
+            --exclude "assets/*" \
+            --cache-control "public, max-age=0, must-revalidate"
 
-      # ----- Sync ALL HTML files (any depth) with correct headers -----
-      # Note: sync applies headers only on uploaded/changed files.
+      # Sync ALL HTML files (any depth) with correct headers (idempotent)
       - name: Upload HTML files (nested)
         run: |
           set -euo pipefail
           aws s3 sync . "s3://$S3_BUCKET/" \
-          --exclude "*" \
-          --include "*.html" \
-          --include "**/*.html" \
-          --exact-timestamps \
-          --content-type "text/html; charset=utf-8" \
-          --cache-control "public, max-age=0, must-revalidate"
+            --exclude "*" \
+            --include "*.html" \
+            --include "**/*.html" \
+            --exact-timestamps \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "public, max-age=0, must-revalidate"
 
       - name: Upload root metadata (robots/sitemap/favicon)
         run: |
@@ -124,43 +122,34 @@ jobs:
               --cache-control "public, max-age=31536000, immutable"
           fi
 
-      # ----- Sync assets with long-lived cache (if present) -----
       - name: Upload assets (css/js/images/static)
         run: |
           set -euo pipefail
           if [ -d "assets/css" ]; then
             aws s3 sync assets/css/ "s3://$S3_BUCKET/assets/css/" \
               --exact-timestamps \
+              --delete \
               --cache-control "public, max-age=31536000, immutable"
           fi
           if [ -d "assets/js" ]; then
             aws s3 sync assets/js/ "s3://$S3_BUCKET/assets/js/" \
               --exact-timestamps \
+              --delete \
               --cache-control "public, max-age=31536000, immutable"
           fi
           if [ -d "assets/images" ]; then
             aws s3 sync assets/images/ "s3://$S3_BUCKET/assets/images/" \
               --exact-timestamps \
+              --delete \
               --cache-control "public, max-age=31536000, immutable"
           fi
           if [ -d "static" ]; then
             aws s3 sync static/ "s3://$S3_BUCKET/static/" \
               --exact-timestamps \
+              --delete \
               --cache-control "public, max-age=31536000, immutable"
           fi
 
-      # Keep bucket tidy: optional cleanup of removed files at top-level paths
-      # (Uncomment if you want deletions mirrored; be careful during early development.)
-      # - name: Optional cleanup (mirror deletions)
-      #   run: |
-      #     set -euo pipefail
-      #     aws s3 sync . "s3://$S3_BUCKET/" --exclude "*" --include "*.html" --include "*/**/*.html" --delete
-      #     [ -d assets/css ]    && aws s3 sync assets/css/    "s3://$S3_BUCKET/assets/css/"    --delete
-      #     [ -d assets/js ]     && aws s3 sync assets/js/     "s3://$S3_BUCKET/assets/js/"     --delete
-      #     [ -d assets/images ] && aws s3 sync assets/images/ "s3://$S3_BUCKET/assets/images/" --delete
-      #     [ -d static ]        && aws s3 sync static/        "s3://$S3_BUCKET/static/"        --delete
-
-      # ----- Invalidate CloudFront so changes show immediately -----
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
@@ -170,42 +159,22 @@ jobs:
       - name: Verify HSTS header (preload-compatible)
         run: |
           set -euo pipefail
-
           check() {
             domain="$1"
             echo "Checking HSTS on https://$domain"
-
-            # Fetch response headers (with retries in case CDN is still propagating)
             headers="$(curl -sS -D - -o /dev/null --http2 --retry 6 --retry-connrefused --retry-delay 5 "https://$domain")"
-
-            # Require header to exist
             echo "$headers" | grep -iE '^strict-transport-security:' > /dev/null \
               || { echo "::error::Missing Strict-Transport-Security on $domain"; exit 1; }
-
-            # Extract the header value
             sts="$(echo "$headers" | awk -F': ' 'tolower($1)=="strict-transport-security"{print $2}' | tr -d '\r')"
-            echo "HSTS: $sts"
-
-            # Require includeSubDomains and preload
-            echo "$sts" | grep -qi 'includesubdomains' \
-              || { echo "::error::HSTS missing includeSubDomains on $domain"; exit 1; }
-            echo "$sts" | grep -qi 'preload' \
-              || { echo "::error::HSTS missing preload on $domain"; exit 1; }
-
-            # Require max-age >= 31536000
+            echo "$sts" | grep -qi 'includesubdomains' || { echo "::error::HSTS missing includeSubDomains on $domain"; exit 1; }
+            echo "$sts" | grep -qi 'preload' || { echo "::error::HSTS missing preload on $domain"; exit 1; }
             maxage="$(echo "$sts" | sed -n 's/.*max-age=\([0-9]\+\).*/\1/p')"
-            if [ -z "$maxage" ] || [ "$maxage" -lt 31536000 ]; then
-              echo "::error::HSTS max-age too low on $domain (got: ${maxage:-none})"
-              exit 1
-            fi
-
+            [ -n "$maxage" ] && [ "$maxage" -ge 31536000 ] || { echo "::error::HSTS max-age too low ($maxage)"; exit 1; }
             echo "OK: $domain HSTS is preload-compatible."
           }
-
           for d in bitcurrents.net www.bitcurrents.net; do
             check "$d"
           done
-
           echo "✅ HSTS checks passed for all domains."
 
       - name: Verify additional security headers (optional)
