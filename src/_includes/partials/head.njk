@@ -1,4 +1,4 @@
-{# src/_includes/partials/head.njk #}
+{# Head partial: metadata, favicons, CSS, theme preflight (external) #}
 <head>
   <!-- Core meta -->
   <meta charset="utf-8" />
@@ -9,10 +9,9 @@
   <title>{{ title or site.title }}</title>
   {% set canon = (site.url or '') + (page.url or '/') %}
   <link rel="canonical" href="{{ canon }}" />
-
   <meta name="description" content="{{ description or site.description }}" />
 
-  {# Open Graph / Twitter (optional but nice) #}
+  {# Open Graph / Twitter #}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="{{ title or site.title }}" />
   <meta property="og:description" content="{{ description or site.description }}" />
@@ -27,25 +26,16 @@
   <link rel="icon" type="image/png" href="/assets/images/BitCurrent-favicon.png" />
   <link rel="apple-touch-icon" href="/assets/images/BitCurrent-favicon.png" />
 
-  {# Optional: preconnect to CDN if you have one (safe to leave if not) #}
+  {# Optional CDN preconnect #}
   {% if site.cdn %}
     <link rel="preconnect" href="{{ site.cdn }}" crossorigin />
   {% endif %}
 
-  {# ---- THEME PREFLIGHT (no-flash) ----
-     1) Respect saved setting
-     2) Else follow system dark
-     3) Else default to dark
-     Apply .theme-dark to <html> BEFORE CSS paints. #}
-<!-- theme preflight (keep inline and above CSS) -->
-<!-- theme preflight (keep inline and above CSS) -->
-
-  {# Load theme toggler BEFORE CSS so first paint is correct #}
+  {# Theme preflight: external (no inline JS; avoids CSP violations) #}
   <script src="/assets/js/theme-preload.js?v={{ build.id }}"></script>
 
   {# Site CSS #}
-  <link rel="stylesheet" href="/assets/css/smoke.css" />
+  <link rel="stylesheet" href="/assets/css/smoke.css?v={{ build.id }}" />
 
-  {# Hook for page-specific additions if needed #}
   {% block head_extra %}{% endblock %}
 </head>

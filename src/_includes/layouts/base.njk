@@ -1,27 +1,20 @@
-{# src/_includes/layouts/base.njk #}
-<!DOCTYPE html>
+{# Base layout: wraps every page #}
+<!doctype html>
 <html lang="en">
-  <head>
-    {# head.njk must include, in this order:
-         1) <script src="/assets/js/theme-preload.js"></script>  (NO defer; must come before CSS)
-         2) <link rel="stylesheet" href="/assets/css/smoke.css">
-         3) meta tags, favicon, etc.
-    #}
-    {% include "partials/head.njk" %}
-  </head>
+  {% include "partials/head.njk" %}
+
   <body class="site-bg">
-    {# Header with .theme-toggle button #}
+    <a class="skip-link" href="#content">Skip to content</a>
+
     {% include "partials/header.njk" %}
 
-    <main id="content" class="page">
-      {# Page content goes here #}
-      {{ content | safe }}
+    <main id="content" class="content page">
+      {% block content %}{% endblock %}
     </main>
 
     {% include "partials/footer.njk" %}
-    {# footer.njk must include at the end of <body>:
-         <script src="/assets/js/theme.js" defer></script>
-         {# Optionally: <script src="/assets/js/app.js" defer></script> #}
-    #}
+
+    {# Theme toggler (external; CSP-safe) #}
+    <script src="/assets/js/theme.js?v={{ build.id }}" defer></script>
   </body>
 </html>
