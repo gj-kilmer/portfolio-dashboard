@@ -1,24 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
 
-<!doctype html>
-<html lang="en">
-  
 <head>
   <!-- Core meta -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
   
   <title>BitCurrents — Portfolio</title>
   
-  <link rel="canonical" href="/" />
-  <meta name="description" content="" />
+  <link rel="canonical" href="https://bitcurrents.net/" />
 
   
   <meta property="og:type" content="website" />
   <meta property="og:title" content="BitCurrents — Portfolio" />
   <meta property="og:description" content="" />
-  <meta property="og:url" content="/" />
+  <meta property="og:url" content="https://bitcurrents.net/" />
   
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="BitCurrents — Portfolio" />
@@ -33,18 +33,23 @@
   
 
   
-  <script src="/assets/js/theme-preload.js?v=1756558570637"></script>
+  <script src="/assets/js/theme-preload.js?v=1756607288707"></script>
 
   
-  <link rel="stylesheet" href="/assets/css/smoke.css?v=1756558570637" />
+  <link rel="stylesheet" href="/assets/css/smoke.css?v=1756607288707" />
 
   
+
+  
+  <script src="/assets/js/theme.js?v=1756607288707" defer></script>
 </head>
 
-  <body class="site-bg">
-    <a class="skip-link" href="#content">Skip to content</a>
+<body>
+  
+  <a class="skip-link" href="#main">Skip to content</a>
 
-    <header class="site-header">
+  
+  <header class="site-header">
   <div class="container header-inner">
     <div class="brand">
       <img src="/assets/images/BitCurrent-latest.png" alt="BitCurrents logo" class="brand-logo" />
@@ -66,27 +71,96 @@
     </nav>
 
     <!-- Must match selectors used in theme.js -->
-    <button class="btn btn--secondary theme-toggle" type="button" aria-pressed="false" aria-label="Toggle color theme">
-      <span class="theme-label">Dark mode</span>
+    <button
+      id="theme-toggle"
+      class="btn btn--ghost"
+      aria-label="Toggle color theme"
+      data-theme-toggle
+    >
+      <span data-theme-label>Dark mode</span>
     </button>
+
+    
+    <script src="/assets/js/theme.js?v=" defer nonce=""></script>
   </div>
 </header>
 
-    <main id="content" class="content page">
-      
-    </main>
+  <main id="main" tabindex="-1" class="site-main">
+    
+<section class="hero">
+  <div class="container">
+    <div class="hero--gradient">
+    <h1>Transforming IT into a Strategic Advantage</h1>
+    <p class="tagline">"Automate the routine. Secure the critical. Empower your people."</p>
+    <p>
+      With over 20 years of IT leadership, I help organizations modernize, secure, and optimize their technology. From cloud strategy to enterprise transformation, my focus is on creating resilient systems that free teams to focus on what matters most.
+    </p>
+      <div style="margin-top: 16px;">
+        <a class="btn btn--primary" href="/under-construction/">See My Work</a>
+        <a class="btn btn--secondary" href="/under-construction/">Start a Conversation</a>
+      </div>
+    </div>
 
-    <footer class="site-footer">
-  <div class="container footer-inner">
-    <p>&copy; 2025 BitCurrents</p>
-    <div>
-      <p><a href="#">Privacy</a> <a href="#">Terms</a></p>
+    <!-- Featured Projects: two cards with wider spacing -->
+    <h2 style="margin-top: 40px;">Featured Projects</h2>
+    <p>A selection of hands-on solutions that showcase my approach to building secure, scalable, and resilient systems.</p>
+    <div class="tiles tiles--featured">
+      <article class="tile">
+        <div class="tile-accent"></div>
+        <h3>Static Site on S3 + CloudFront</h3>
+        <p>A secure, reliable website solution that cut costs and improved performance.</p>
+        <a class="link-strong" href="/under-construction/">See Project</a>
+      </article>
+
+      <article class="tile">
+        <div class="tile-accent-emerald tile-accent"></div>
+        <h3>Scalable Microservice</h3>
+        <p>Delivered a scalable service that grew with demand, but without downtime.</p>
+        <a class="link-strong" href="/under-construction/">See Project</a>
+      </article>
+    </div>
+
+    <!-- Main tiles (3-up on desktop) -->
+    <h2 style="margin-top: 40px;">Explore</h2>
+    <p>Explore my approach to leadership, dive into technical insights, and discover ways to collaborate.</p>
+    <div class="tiles">
+      <article class="tile">
+        <div class="tile-accent"></div>
+        <h3>About</h3>
+        <p>Learn how I lead teams and design systems that drive lasting impact.</p>
+        <a class="link-strong" href="/under-construction/">Learn More</a>
+      </article>
+
+      <article class="tile">
+        <div class="tile-accent-cyan tile-accent"></div>
+        <h3>Notes</h3>
+        <p>Deep dives on guardrails, DNS cutovers, and security headers. Practical lessons from the field.</p>
+        <a class="link-strong" href="/under-construction/">Read Notes</a>
+      </article>
+
+      <article class="tile">
+        <div class="tile-accent-emerald tile-accent"></div>
+        <h3>Start a Conversation</h3>
+        <p>Interested in working together? Let’s talk about your goals.</p>
+        <a class="link-strong" href="/under-construction/">Get in Touch</a>
+      </article>
     </div>
   </div>
-  <script src="/assets/js/theme.js" defer></script>
+</section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <p class="copyright">&copy; 2025 BitCurrents</p>
+    <nav class="footer-nav" aria-label="Legal">
+      <a href="/privacy/">Privacy</a>
+      <span class="sep">•</span>
+      <a href="/terms/">Terms</a>
+    </nav>
+  </div>
 </footer>
 
-    
-    <script src="/assets/js/theme.js?v=1756558570637" defer></script>
-  </body>
+
+  
+</body>
 </html>

@@ -4,12 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
   {# SEO basics #}
   <title>{{ title or site.title }}</title>
-  {% set canon = (site.url or '') + (page.url or '/') %}
+  {% set canon = page.url | url | absoluteUrl(site.url) %}
   <link rel="canonical" href="{{ canon }}" />
-  <meta name="description" content="{{ description or site.description }}" />
 
   {# Open Graph / Twitter #}
   <meta property="og:type" content="website" />
@@ -31,11 +32,16 @@
     <link rel="preconnect" href="{{ site.cdn }}" crossorigin />
   {% endif %}
 
-  {# Theme preflight: external (no inline JS; avoids CSP violations) #}
+  {# Theme preflight: external (no inline JS; avoids CSP violations).
+     This must be before CSS so data-theme is set ahead of first paint. #}
   <script src="/assets/js/theme-preload.js?v={{ build.id }}"></script>
 
   {# Site CSS #}
   <link rel="stylesheet" href="/assets/css/smoke.css?v={{ build.id }}" />
 
   {% block head_extra %}{% endblock %}
+
+  {# Theme runtime: handles toggle; CSP-safe because it's an external file.
+     'defer' waits until DOM is parsed while not blocking paint. #}
+  <script src="/assets/js/theme.js?v={{ build.id }}" defer></script>
 </head>

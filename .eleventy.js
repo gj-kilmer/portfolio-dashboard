@@ -1,5 +1,7 @@
 // .eleventy.js
+const pluginRss = require("@11ty/eleventy-plugin-rss");
 module.exports = function (eleventyConfig) {
+  eleventyConfig.addPlugin(pluginRss);
   // Pass assets through
   eleventyConfig.addPassthroughCopy({ "assets": "assets" });
 
@@ -8,22 +10,33 @@ module.exports = function (eleventyConfig) {
     return (str || "").startsWith(prefix);
   });
 
+  // ✅ Add site metadata (for canonical, etc.)
+  eleventyConfig.addGlobalData("site", {
+    url: "https://bitcurrents.net",
+    name: "BitCurrents"
+  });
+
+  // ✅ Ensure BrowserSync doesn’t rewrite canonical links in dev
+  eleventyConfig.setBrowserSyncConfig({
+    callbacks: {
+      ready: function (err, bs) {
+        bs.addMiddleware("*", (req, res) => {
+          res.writeHead(302, { location: "https://bitcurrents.net" + req.url });
+          res.end();
+        });
+      }
+    }
+  });
+
   return {
     dir: {
       input: "src",
       includes: "_includes",
       output: "_site"
-    }
-  };
-  // Make BUILD_ID available in all templates as build
-  return {
-    dir: { input: "src", output: "_site", includes: "_includes" },
-    // Global data
+    },
     dataTemplateEngine: "njk",
     markdownTemplateEngine: "njk",
     htmlTemplateEngine: "njk",
-    passthroughFileCopy: true,
-    // Eleventy doesn’t have a direct "globalData" block; easiest is add
-    // a global data file. But to keep it inline, do this:
+    passthroughFileCopy: true
   };
 };

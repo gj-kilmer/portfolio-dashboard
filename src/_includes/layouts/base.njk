@@ -1,20 +1,20 @@
-{# Base layout: wraps every page #}
-<!doctype html>
-<html lang="en">
-  {% include "partials/head.njk" %}
+<!DOCTYPE html>
+<html lang="{{ site.lang or 'en' }}" class="no-js">
+{% include "partials/head.njk" %}
 
-  <body class="site-bg">
-    <a class="skip-link" href="#content">Skip to content</a>
+<body>
+  {# Accessible skip link (only shows on focus; styled in CSS) #}
+  <a class="skip-link" href="#main">Skip to content</a>
 
-    {% include "partials/header.njk" %}
+  {# Global header/nav #}
+  {% include "partials/header.njk" %}
 
-    <main id="content" class="content page">
-      {% block content %}{% endblock %}
-    </main>
+  <main id="main" tabindex="-1" class="site-main">
+    {% block content %}{{ content | safe }}{% endblock %}
+  </main>
 
-    {% include "partials/footer.njk" %}
+  {% include "partials/footer.njk" %}
 
-    {# Theme toggler (external; CSP-safe) #}
-    <script src="/assets/js/theme.js?v={{ build.id }}" defer></script>
-  </body>
+  {% block body_scripts %}{% endblock %}
+</body>
 </html>
