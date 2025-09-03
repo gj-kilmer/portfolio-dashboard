@@ -63,6 +63,13 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
   --shadow-sm: 0 4px 8px rgba(0,0,0,.12);
   --shadow-md: 0 8px 18px rgba(0,0,0,.18);
   --shadow-lg: 0 20px 40px rgba(0,0,0,.25);
+
+  --bg-image: url('/assets/images/Light-BG-Main.png');  /* light mode */
+  --bg-vignette: radial-gradient(135% 170% at 50% 10%,
+                 rgba(255,255,255,0) 0%,
+                 rgba(255,255,255,0) 55%,
+                 rgba(0,0,0,0.16) 100%);
+  --bg-noise: none; /* optional: replace with data-URI if you want subtle grain */
 }
 
 /* Dark theme (variables override :root) */
@@ -106,14 +113,21 @@ html.theme-dark, :root.theme-dark {
   --danger-hover: #ef4444;
 
   --btn-ghost-active: rgba(122,109,255,0.24);
+
+  --bg-image: url('/assets/images/Dark-BG-Main.png');   /* dark mode */
+  --bg-vignette: radial-gradient(135% 170% at 50% 10%,
+                 rgba(0,0,0,0) 0%,
+                 rgba(0,0,0,0) 50%,
+                 rgba(0,0,0,0.28) 100%);
 }
+
 html.theme-dark { color-scheme: dark; }
 
 /* Ensure page chrome flips with dark theme even if other rules load later */
 html.theme-dark,
 html.theme-dark body,
 html.theme-dark .site-bg {
-  background: var(--surface);
+  background-color: var(--surface);
   color: var(--text);
 }
 /* ========================
@@ -123,9 +137,26 @@ html { background: var(--surface); }
 body, .site-bg {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: var(--surface);
+
+  /* 1) base color from tokens  2) vignette overlay  3) actual image */
+  background-color: var(--surface);
+  background-image: var(--bg-vignette), var(--bg-image);
+  background-size: 100% 100%, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+
+  /* crop gracefully on any aspect ratio */
+  /* (leave attachment 'scroll' for better mobile perf) */
   color: var(--text);
   line-height: 1.6;
+}
+
+/* Tasteful parallax for larger screens only */
+@media (min-width: 1024px) {
+  body,
+  .site-bg {
+    background-attachment: scroll, fixed; /* vignette scrolls; image fixed */
+  }
 }
 
 p {
