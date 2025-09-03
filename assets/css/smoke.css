@@ -64,7 +64,7 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
   --shadow-md: 0 8px 18px rgba(0,0,0,.18);
   --shadow-lg: 0 20px 40px rgba(0,0,0,.25);
 
-  --bg-image: url('/assets/images/Light-BG-Main.png');  /* light mode */
+  --bg-image: url('/assets/images/Light-BG-main.png');  /* light mode */
   --bg-vignette: radial-gradient(135% 170% at 50% 10%,
                  rgba(255,255,255,0) 0%,
                  rgba(255,255,255,0) 55%,
@@ -114,7 +114,7 @@ html.theme-dark, :root.theme-dark {
 
   --btn-ghost-active: rgba(122,109,255,0.24);
 
-  --bg-image: url('/assets/images/Dark-BG-Main.png');   /* dark mode */
+  --bg-image: url('/assets/images/Dark-BG-main.png');   /* dark mode */
   --bg-vignette: radial-gradient(135% 170% at 50% 10%,
                  rgba(0,0,0,0) 0%,
                  rgba(0,0,0,0) 50%,
